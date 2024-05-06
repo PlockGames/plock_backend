@@ -28,7 +28,10 @@
 
 ## Installation
 
-Ensure you have Docker and Docker Compose installed on your system. If not, [follow the Docker installation guide](https://docs.docker.com/get-docker/).
+Copy the content of the ``.env.example`` file to a new ``.env`` file (ignored).
+Inside, you'll have to specify missing informations.
+
+Then, ensure you have Docker and Docker Compose installed on your system. If not, [follow the Docker installation guide](https://docs.docker.com/get-docker/).
 
 ```bash
 # Build and run the Docker container
