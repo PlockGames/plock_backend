@@ -12,3 +12,71 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+
+model Game {
+  id            Int        @id @default(autoincrement())
+  gameId        String     @unique
+  title         String
+  tags          String[]
+  creatorId     String
+  creationDate  String
+  gameUrl       String
+  playTime      String
+  gameType      String
+  thumbnailUrl  String
+  likes         Int
+  comments      Comment[]
+  objects       GameObject[]
+  levels        Level[]
+  winConditions WinCondition[]
+}
+
+// Comment model
+model Comment {
+  id      Int    @id @default(autoincrement())
+  userId  String
+  comment String
+  date    String
+  game    Game   @relation(fields: [gameId], references: [gameId])
+  gameId  String
+}
+
+// GameObject model
+model GameObject {
+  id          Int      @id @default(autoincrement())
+  objectId    String   @unique
+  type        String
+  positionX   Float
+  positionY   Float
+  spriteUrl   String
+  width       Float
+  height      Float
+  speed       Float
+  force       Float
+  direction   String
+  game        Game     @relation(fields: [gameId], references: [gameId])
+  gameId      String
+  level       Level?   @relation(fields: [levelId], references: [id])
+  levelId     Int?
+}
+
+// Level model
+model Level {
+  id            Int      @id @default(autoincrement())
+  backgroundUrl String
+  objects       GameObject[]
+  game          Game     @relation(fields: [gameId], references: [gameId])
+  gameId        String
+}
+
+// WinCondition model
+model WinCondition {
+  id            Int      @id @default(autoincrement())
+  type          String
+  requiredItems String[]
+  targetX       Float
+  targetY       Float
+  game          Game     @relation(fields: [gameId], references: [gameId])
+  gameId        String
+}
