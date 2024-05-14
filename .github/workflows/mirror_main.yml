@@ -1,0 +1,44 @@
+name: Push on Epitech repository
+
+on:
+  push:
+    branches:
+      - main     
+jobs: 
+  build:
+    if: github.repository == 'PlockGames/plock_backend'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.AUTOMNE_TOKEN }}
+
+      - name: Clone Epitech repo
+        uses: GuillaumeFalourd/clone-github-repo-action@v2.3
+        with:
+          owner: 'EpitechMscProPromo2025'
+          repository: 'T-ESP-800-project_esp800-56365-TLS-tiktok_game'
+          branch: 'main'
+          access-token: ${{ secrets.AUTOMNE_TOKEN }}
+    
+      - name: Copy code from commit to the cloned repo and git push 
+        run: |
+          ls -la T-ESP-800-project_esp800-56365-TLS-tiktok_game
+          rm -rf .git .github
+          rm -rf T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/*
+          sudo rsync -a * T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/ --exclude='T-ESP-800-project_esp800-56365-TLS-tiktok_game' --exclude='.git' --exclude='.github'
+  
+      - name: Configure git user in the action
+        uses: tidylabs/action-git-config-user@v2
+        with:
+          token: ${{ github.token }} 
+      - name: Commit files
+        run: |
+          cd T-ESP-800-project_esp800-56365-TLS-tiktok_game/back
+          git add *
+          git commit -m "${{ github.event.head_commit.message }}"
+          git push --force
+        env:
+          GITHUB_REF: ${{ github.ref }}
