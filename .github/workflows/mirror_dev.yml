@@ -40,7 +40,7 @@ jobs:
           pwd
           ls -la .
           git add *
-          git commit -m "${{ github.event.head_commit.message }}"
+          git commit -m "${{ github.ref  }}"
           git push --force
         env:
           GITHUB_REF: ${{ github.ref }}
