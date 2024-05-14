@@ -35,6 +35,7 @@ jobs:
           sudo rsync -a * T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/ --exclude='T-ESP-800-project_esp800-56365-TLS-tiktok_game'
           ls -la T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/.github/workflows/
           ls -la T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/
+          if [ -d "T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/plock_backend" ]; then rm -rf T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/plock_backend; fi
 
           echo "${{ github.actor	}}"
           
