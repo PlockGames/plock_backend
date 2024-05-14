@@ -27,8 +27,8 @@ jobs:
         run: |
           ls -la .
           ls -la T-ESP-800-project_esp800-56365-TLS-tiktok_game
-          rm -rf T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/*
-          rm -rf T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/.*
+          rm -rf T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/
+          mkdir -p T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/
           rm  .github/workflows/mirror*
           rm  .git
           ls -la T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/
