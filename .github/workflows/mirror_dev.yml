@@ -15,6 +15,7 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.AUTOMNE_TOKEN }}
 
+        #Clone le repo Epitech 
       - name: Clone Epitech repo
         uses: GuillaumeFalourd/clone-github-repo-action@v2.3
         with:
@@ -25,25 +26,30 @@ jobs:
     
       - name: Copy code from commit to the cloned repo and git push 
         run: |
-          ls -la .
+          #Supprime le dossier back back pré existant dans le but d'en recréer un nouveau et de copier le code du commit dedans
           rm -rf T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/
           mkdir -p T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/
+
+          #Supprime les actions mirror ainsi que le dossier .git du repo de l'org Plock qui ne sont pas utile dans le repo d'Epitech
           rm  .github/workflows/mirror*
           rm  -rf .git
-          ls -la T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/
+
+          #Copie tout le code du dossier actuel pour le mettre dans le répo Epitech en excluant tout ce qui ne sert pas
           sudo rsync -a .*  T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/ --exclude='.' --exclude='..' --exclude='T-ESP-800-project_esp800-56365-TLS-tiktok_game'
           sudo rsync -a * T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/ --exclude='T-ESP-800-project_esp800-56365-TLS-tiktok_game'
           if [ -d "T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/plock_backend" ]; then rm -rf T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/plock_backend; fi
 
       - name: Commit files
         run: |
+          #Entre dans le répertoire back d'Epitech et configure l'utilisateur pour qu'il soient celui qui trigger l'action
           cd T-ESP-800-project_esp800-56365-TLS-tiktok_game/back
           git config --local user.email "$GITHUB_ACTOR_EMAIL"
           git config --local user.name "$GITHUB_ACTOR"
-          echo "$GITHUB_ACTOR_EMAIL"
+          
+          #Ajoutes tout le code et le commit
           git add *
           git add .*
-          git commit -m "${{ github.ref  }}"
+          git commit -m "$GITHUB_REF"
           git push --force
         env:
           GITHUB_REF: ${{ github.ref }}
