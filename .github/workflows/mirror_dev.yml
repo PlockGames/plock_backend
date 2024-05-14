@@ -37,6 +37,7 @@ jobs:
       - name: Commit files
         run: |
           cd T-ESP-800-project_esp800-56365-TLS-tiktok_game/back
+          ls -la .github/workflows
           git add *
           git commit -m "${{ github.event.head_commit.message }}"
           git push --force
