@@ -32,7 +32,8 @@ jobs:
           ls -la .github/workflows/
           mv .github  T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/
           sudo rsync -a * T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/ --exclude='T-ESP-800-project_esp800-56365-TLS-tiktok_game' --exclude='.git'
-          ls -la T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/
+          ls -la T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/workflows/
+          
 
   
       - name: Configure git user in the action
@@ -43,6 +44,7 @@ jobs:
         run: |
           cd T-ESP-800-project_esp800-56365-TLS-tiktok_game/back
           git add *
+          git add .github/
           git commit -m "${{ github.ref  }}"
           git push --force
         env:
