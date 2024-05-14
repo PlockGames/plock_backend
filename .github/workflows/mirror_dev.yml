@@ -28,7 +28,7 @@ jobs:
           ls -la T-ESP-800-project_esp800-56365-TLS-tiktok_game
           rm -rf .git
           rm -rf T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/*
-          sudo rsync -a * T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/ --exclude='T-ESP-800-project_esp800-56365-TLS-tiktok_game' --exclude='.git' --exclude='.github/workflows/mirror'
+          sudo rsync -a * T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/ --exclude='T-ESP-800-project_esp800-56365-TLS-tiktok_game' --exclude='.git' --exclude='.github/workflows/mirror*'
   
       - name: Configure git user in the action
         uses: tidylabs/action-git-config-user@v2
