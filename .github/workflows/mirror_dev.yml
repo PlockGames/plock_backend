@@ -25,6 +25,7 @@ jobs:
     
       - name: Copy code from commit to the cloned repo and git push 
         run: |
+          ls -la .
           ls -la T-ESP-800-project_esp800-56365-TLS-tiktok_game
           rm -rf .git
           rm -rf T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/*
