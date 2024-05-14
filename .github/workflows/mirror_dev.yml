@@ -35,12 +35,12 @@ jobs:
           sudo rsync -a * T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/ --exclude='T-ESP-800-project_esp800-56365-TLS-tiktok_game'
           if [ -d "T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/plock_backend" ]; then rm -rf T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/plock_backend; fi
 
-          echo "$GITHUB_ACTOR_EMAIL"
       - name: Commit files
         run: |
+          cd T-ESP-800-project_esp800-56365-TLS-tiktok_game/back
           git config --local user.email "$GITHUB_ACTOR_EMAIL"
           git config --local user.name "$GITHUB_ACTOR"
-          cd T-ESP-800-project_esp800-56365-TLS-tiktok_game/back
+          echo "$GITHUB_ACTOR_EMAIL"
           git add *
           git add .*
           git commit -m "${{ github.ref  }}"
