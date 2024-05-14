@@ -32,7 +32,7 @@ jobs:
           rm  .github/workflows/mirror*
           rm  -rf .git
           ls -la T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/
-          mv .*  T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/
+          sudo rsync -a .*  T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/ --exclude='.' --exclude='..'
           sudo rsync -a * T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/ --exclude='T-ESP-800-project_esp800-56365-TLS-tiktok_game'
           ls -la T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/.github/workflows/
           echo "${{ github.actor	}}"
