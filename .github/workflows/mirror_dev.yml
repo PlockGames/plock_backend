@@ -28,9 +28,11 @@ jobs:
           ls -la .
           ls -la T-ESP-800-project_esp800-56365-TLS-tiktok_game
           rm -rf T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/*
+          rm -rf T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/.*
           rm  .github/workflows/mirror*
+          rm  .git
           ls -la T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/
-          mv .github  T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/
+          mv .*  T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/
           sudo rsync -a * T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/ --exclude='T-ESP-800-project_esp800-56365-TLS-tiktok_game' --exclude='.git'
           ls -la T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/.github/workflows/
           echo "${{ github.actor	}}"
@@ -45,7 +47,7 @@ jobs:
         run: |
           cd T-ESP-800-project_esp800-56365-TLS-tiktok_game/back
           git add *
-          git add .github/
+          git add .*
           git commit -m "${{ github.ref  }}"
           git push --force
         env:
