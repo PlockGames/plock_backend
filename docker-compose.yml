@@ -9,27 +9,27 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_PORT=${POSTGRES_PORT}
     ports:
       - 5432:5432
     volumes:
       - postgres_data:/var/lib/postgresql/data/
-
-  pgadmin:
-    container_name: pgadmin
-    image: dpage/pgadmin4
-    depends_on:
-      - postgres
-    restart: always
-    ports:
-      - "5050:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: "root@root.com"
-      PGADMIN_DEFAULT_PASSWORD: "root"
+    networks:
+      - nest-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'"
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
 
   nestjs-api:
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    container_name: nestjs-api
     build:
       context: .
       dockerfile: Dockerfile
@@ -41,7 +41,15 @@ services:
       - PORT=3000
       - NODE_ENV=development
     volumes:
-      - ./src:/usr/src/app/src
+      - ./src:/usr/src/app/src7
+    networks:
+      - nest-net
+    stdin_open: true # docker run -i
+    tty: true # docker run -t
+
+networks:
+  nest-net:
+    driver: bridge
 
 volumes:
   postgres_data:

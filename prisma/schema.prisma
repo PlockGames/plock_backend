@@ -13,10 +13,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model Game {
-  id            Int        @id @default(autoincrement())
-  gameId        String     @unique
+  id            Int            @id @default(autoincrement())
+  gameId        String         @unique
   title         String
   tags          String[]
   creatorId     String
@@ -28,7 +27,6 @@ model Game {
   likes         Int
   comments      Comment[]
   objects       GameObject[]
-  levels        Level[]
   winConditions WinCondition[]
 }
 
@@ -44,30 +42,19 @@ model Comment {
 
 // GameObject model
 model GameObject {
-  id          Int      @id @default(autoincrement())
-  objectId    String   @unique
-  type        String
-  positionX   Float
-  positionY   Float
-  spriteUrl   String
-  width       Float
-  height      Float
-  speed       Float
-  force       Float
-  direction   String
-  game        Game     @relation(fields: [gameId], references: [gameId])
-  gameId      String
-  level       Level?   @relation(fields: [levelId], references: [id])
-  levelId     Int?
-}
-
-// Level model
-model Level {
-  id            Int      @id @default(autoincrement())
-  backgroundUrl String
-  objects       GameObject[]
-  game          Game     @relation(fields: [gameId], references: [gameId])
-  gameId        String
+  id        Int    @id @default(autoincrement())
+  objectId  String @unique
+  type      String
+  positionX Float
+  positionY Float
+  spriteUrl String
+  width     Float
+  height    Float
+  speed     Float
+  force     Float
+  direction String
+  game      Game   @relation(fields: [gameId], references: [gameId])
+  gameId    String
 }
 
 // WinCondition model
