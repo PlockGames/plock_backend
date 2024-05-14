@@ -26,11 +26,9 @@ jobs:
       - name: Copy code from commit to the cloned repo and git push 
         run: |
           ls -la .
-          ls -la T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/
-          rm -rf .git
+          ls -la T-ESP-800-project_esp800-56365-TLS-tiktok_game
           rm -rf T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/*
-          ls -la T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/
-          sudo rsync -a * T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/ --exclude='T-ESP-800-project_esp800-56365-TLS-tiktok_game' 
+          sudo rsync -a * T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/ --exclude='T-ESP-800-project_esp800-56365-TLS-tiktok_game' --exclude='.git' --exclude='.github/workflows/mirror*'
           ls -la T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/
 
   
@@ -41,8 +39,6 @@ jobs:
       - name: Commit files
         run: |
           cd T-ESP-800-project_esp800-56365-TLS-tiktok_game/back
-          pwd
-          ls -la .
           git add *
           git commit -m "${{ github.ref  }}"
           git push --force
