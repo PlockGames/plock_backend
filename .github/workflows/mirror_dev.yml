@@ -6,7 +6,7 @@ on:
       - dev      
 jobs: 
   build:
-    if: github.repository == 'PlockGames/plock_back'
+    if: github.repository == 'PlockGames/plock_backend'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
