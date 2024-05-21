@@ -52,6 +52,7 @@ jobs:
           git config --local user.name "$GITHUB_ACTOR"
           
           #Ajoutes tout le code et le commit
+          git add .*
           git add *
           git commit -m "$GITHUB_REF"
           git push --force
