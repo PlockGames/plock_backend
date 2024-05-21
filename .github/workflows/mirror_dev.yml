@@ -40,20 +40,20 @@ jobs:
           rm  -rf .git
 
           #Copie tout le code du dossier actuel pour le mettre dans le répo Epitech en excluant tout ce qui ne sert pas
-          sudo rsync -a . $EPITECH_REPO/back/ --exclude="$EPITECH_REPO" --exclude=".git"
-          echo "$EPITECH_REPO"
+          sudo rsync -a . $EPITECH_REPO/back/ --exclude=$EPITECH_REPO --exclude=".git"
+          echo $EPITECH_REPO
           if [ -d "$EPITECH_REPO/back/plock_backend" ]; then rm -rf $EPITECH_REPO/back/plock_backend; fi
 
       - name: Commit files
         run: |
           #Entre dans le répertoire back d'Epitech et configure l'utilisateur pour qu'il soient celui qui trigger l'action
           cd $EPITECH_REPO/back
+          touch slaaaaayy
           git config --local user.email "$GITHUB_ACTOR_EMAIL"
           git config --local user.name "$GITHUB_ACTOR"
           
           #Ajoutes tout le code et le commit
           git add *
-          git add .*
           git commit -m "$GITHUB_REF"
           git push --force
         env:
