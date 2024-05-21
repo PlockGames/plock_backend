@@ -3,7 +3,7 @@ name: Push on Epitech repository
 on:
   push:
     branches:
-      - $BRANCH     
+      - main     
 jobs: 
   build:
     if: github.repository == 'PlockGames/plock_backend'
