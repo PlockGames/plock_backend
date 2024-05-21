@@ -3,7 +3,7 @@ name: Push on Epitech repository
 on:
   push:
     branches:
-      - main     
+      - $BRANCH     
 jobs: 
   build:
     if: github.repository == 'PlockGames/plock_backend'
@@ -20,29 +20,29 @@ jobs:
         uses: GuillaumeFalourd/clone-github-repo-action@v2.3
         with:
           owner: 'EpitechMscProPromo2025'
-          repository: 'T-ESP-800-project_esp800-56365-TLS-tiktok_game'
-          branch: 'main'
+          repository: '$EPITECH_REPO'
+          branch: '$BRANCH'
           access-token: ${{ secrets.AUTOMNE_TOKEN }}
     
       - name: Copy code from commit to the cloned repo and git push 
         run: |
           #Supprime le dossier back back pré existant dans le but d'en recréer un nouveau et de copier le code du commit dedans
-          rm -rf T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/
-          mkdir -p T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/
+          rm -rf $EPITECH_REPO/back/
+          mkdir -p $EPITECH_REPO/back/
 
           #Supprime les actions mirror ainsi que le dossier .git du repo de l'org Plock qui ne sont pas utile dans le repo d'Epitech
           rm  .github/workflows/mirror*
           rm  -rf .git
 
           #Copie tout le code du dossier actuel pour le mettre dans le répo Epitech en excluant tout ce qui ne sert pas
-          sudo rsync -a .*  T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/ --exclude='.' --exclude='..' --exclude='T-ESP-800-project_esp800-56365-TLS-tiktok_game'
-          sudo rsync -a * T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/ --exclude='T-ESP-800-project_esp800-56365-TLS-tiktok_game'
-          if [ -d "T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/plock_backend" ]; then rm -rf T-ESP-800-project_esp800-56365-TLS-tiktok_game/back/plock_backend; fi
+          sudo rsync -a .*  $EPITECH_REPO/back/ --exclude='.' --exclude='..' --exclude='$EPITECH_REPO'
+          sudo rsync -a * $EPITECH_REPO/back/ --exclude='$EPITECH_REPO'
+          if [ -d "$EPITECH_REPO/back/plock_backend" ]; then rm -rf $EPITECH_REPO/back/plock_backend; fi
 
       - name: Commit files
         run: |
           #Entre dans le répertoire back d'Epitech et configure l'utilisateur pour qu'il soient celui qui trigger l'action
-          cd T-ESP-800-project_esp800-56365-TLS-tiktok_game/back
+          cd $EPITECH_REPO/back
           git config --local user.email "$GITHUB_ACTOR_EMAIL"
           git config --local user.name "$GITHUB_ACTOR"
           
@@ -55,4 +55,6 @@ jobs:
           GITHUB_REF: ${{ github.ref }}
           GITHUB_ACTOR: ${{ github.actor}}
           GITHUB_ACTOR_EMAIL: ${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com
+          EPITECH_REPO: "T-ESP-800-project_esp800-56365-TLS-tiktok_game"
+          BRANCH: "main"
           
