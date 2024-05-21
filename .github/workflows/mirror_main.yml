@@ -1,5 +1,10 @@
 name: Push on Epitech repository
 
+env:
+  EPITECH_REPO: "T-ESP-800-project_esp800-56365-TLS-tiktok_game"
+  BRANCH: "main"
+
+
 on:
   push:
     branches:
@@ -20,8 +25,8 @@ jobs:
         uses: GuillaumeFalourd/clone-github-repo-action@v2.3
         with:
           owner: 'EpitechMscProPromo2025'
-          repository: '$EPITECH_REPO'
-          branch: '$BRANCH'
+          repository: ${{ env.EPITECH_REPO }}
+          branch: ${{ env.BRANCH }}
           access-token: ${{ secrets.AUTOMNE_TOKEN }}
     
       - name: Copy code from commit to the cloned repo and git push 
@@ -43,6 +48,7 @@ jobs:
         run: |
           #Entre dans le répertoire back d'Epitech et configure l'utilisateur pour qu'il soient celui qui trigger l'action
           cd $EPITECH_REPO/back
+          ls -la .
           git config --local user.email "$GITHUB_ACTOR_EMAIL"
           git config --local user.name "$GITHUB_ACTOR"
           
@@ -55,6 +61,5 @@ jobs:
           GITHUB_REF: ${{ github.ref }}
           GITHUB_ACTOR: ${{ github.actor}}
           GITHUB_ACTOR_EMAIL: ${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com
-          EPITECH_REPO: "T-ESP-800-project_esp800-56365-TLS-tiktok_game"
-          BRANCH: "main"
+
           
