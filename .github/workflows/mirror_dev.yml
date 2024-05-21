@@ -40,8 +40,8 @@ jobs:
           rm  -rf .git
 
           #Copie tout le code du dossier actuel pour le mettre dans le répo Epitech en excluant tout ce qui ne sert pas
-          sudo rsync -a .*  $EPITECH_REPO/back/ --exclude='.' --exclude='..' --exclude='$EPITECH_REPO'
-          sudo rsync -a * $EPITECH_REPO/back/ --exclude='$EPITECH_REPO'
+          sudo rsync -a . $EPITECH_REPO/back/ --exclude="$EPITECH_REPO" --exclude=".git"
+          echo "$EPITECH_REPO"
           if [ -d "$EPITECH_REPO/back/plock_backend" ]; then rm -rf $EPITECH_REPO/back/plock_backend; fi
 
       - name: Commit files
