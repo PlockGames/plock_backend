@@ -47,7 +47,6 @@ jobs:
         run: |
           #Entre dans le répertoire back d'Epitech et configure l'utilisateur pour qu'il soient celui qui trigger l'action
           cd $EPITECH_REPO/back
-          touch .slaaaaaay
           git config --local user.email "$GITHUB_ACTOR_EMAIL"
           git config --local user.name "$GITHUB_ACTOR"
           
