@@ -2,12 +2,13 @@ FROM node:21
 
 WORKDIR /usr/src/app
 
+COPY package*.json ./
+RUN yarn install
+
 COPY . .
 
-RUN npm install
-
-RUN npx prisma generate
+RUN yarn prisma generate
 
 EXPOSE 3000
 
-CMD ["npm","run","start:dev"]
+CMD ["yarn", "start:dev"]
