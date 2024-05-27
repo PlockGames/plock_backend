@@ -11,7 +11,7 @@ on:
       - develop  
       - main   
 jobs: 
-  build:
+  mirror:
     if: github.repository == 'PlockGames/plock_backend'
     runs-on: ubuntu-latest
     steps:
