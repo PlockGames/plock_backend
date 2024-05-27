@@ -21,13 +21,18 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.AUTOMNE_TOKEN }}
 
+      - name: Extract branch name
+        id: extract_branch
+        run: echo "::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/})"
+  
+  
         #Clone le repo Epitech 
       - name: Clone Epitech repo
         uses: GuillaumeFalourd/clone-github-repo-action@v2.3
         with:
           owner: 'EpitechMscProPromo2025'
           repository: ${{ env.EPITECH_REPO }}
-          branch: ${{ github.ref  }}
+          branch: ${{ steps.extract_branch.outputs.branch }}
           access-token: ${{ secrets.AUTOMNE_TOKEN }}
     
       - name: Copy code from commit to the cloned repo and git push 
