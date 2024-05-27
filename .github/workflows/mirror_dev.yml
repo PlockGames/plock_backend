@@ -1,4 +1,4 @@
-name: Push on Epitech repository
+name: DEVELOP Push on Epitech repository
 
 env:
   EPITECH_REPO: "T-ESP-800-project_esp800-56365-TLS-tiktok_game"
@@ -8,7 +8,8 @@ env:
 on:
   push:
     branches:
-      - develop     
+      - develop  
+      - main   
 jobs: 
   build:
     if: github.repository == 'PlockGames/plock_backend'
@@ -26,7 +27,7 @@ jobs:
         with:
           owner: 'EpitechMscProPromo2025'
           repository: ${{ env.EPITECH_REPO }}
-          branch: ${{ env.BRANCH }}
+          branch: ${{ github.ref  }}
           access-token: ${{ secrets.AUTOMNE_TOKEN }}
     
       - name: Copy code from commit to the cloned repo and git push 
