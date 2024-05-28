@@ -11,4 +11,4 @@ RUN yarn prisma generate
 
 EXPOSE 3000
 
-CMD ["yarn", "start:dev"]
+CMD ["sh", "-c", "yarn prisma migrate reset --force && yarn run start:dev"]

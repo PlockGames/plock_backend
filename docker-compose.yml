@@ -16,11 +16,7 @@ services:
     networks:
       - nest-net
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'"
-        ]
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"]
       interval: 10s
       timeout: 3s
       retries: 3
@@ -46,8 +42,6 @@ services:
       - nest-net
     stdin_open: true # docker run -i
     tty: true # docker run -t
-    command: >
-      sh -c "yarn prisma migrate deploy && yarn start:dev"
 
 networks:
   nest-net:
