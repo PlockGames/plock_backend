@@ -14,19 +14,17 @@ datasource db {
 }
 
 model Game {
-  id             Int       @id @default(autoincrement())
-  title          String
-  tags           String[]
-  creatorId      Int
-  creationDate   DateTime
-  gameUrl        String
-  playTime       String
-  gameType       String
-  thumbnailUrl   String
-  likes          Int
-  comments       Comment[]
-  gameObjectId   Int[]
-  winConditionId Int[]
+  id           Int       @id @default(autoincrement())
+  title        String
+  tags         String[]
+  creatorId    Int
+  creationDate DateTime
+  gameUrl      String
+  playTime     String
+  gameType     String
+  thumbnailUrl String
+  likes        Int
+  comments     Comment[]
 }
 
 // Comment model

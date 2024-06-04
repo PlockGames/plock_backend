@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
 import { ConfigService } from '@nestjs/config';
 import { Readable } from 'stream';
 
@@ -45,6 +45,15 @@ export class R2Service {
         return this.s3Client.send(command);
     }
 
+    async listFiles(bucket: string, prefix: string) {
+        const command = new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix });
+        const data = await this.s3Client.send(command);
+        if (!data.Contents || data.Contents.length === 0) {
+            throw new Error('NoSuchKey: The specified key does not exist.');
+        }
+        return data.Contents.map(item => item.Key);
+    }
+
     async getFile(bucket: string, key: string) {
         const command = new GetObjectCommand({
             Bucket: bucket,
@@ -65,5 +74,23 @@ export class R2Service {
 
         const buffer = await streamToBuffer(Body as Readable);
         return { Body: buffer, ContentType: response.ContentType };
+    }
+
+    async deleteFile(bucket: string, key: string) {
+        const command = new DeleteObjectCommand({
+            Bucket: bucket,
+            Key: key,
+        });
+        return this.s3Client.send(command);
+    }
+
+    async updateFile(bucket: string, key: string, body: Buffer | Uint8Array | Blob | string) {
+        const command = new PutObjectCommand({
+            Bucket: bucket,
+            Key: key,
+            Body: body,
+            ContentType: 'application/json',
+        });
+        return this.s3Client.send(command);
     }
 }
