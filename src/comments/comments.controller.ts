@@ -14,7 +14,7 @@ export class CommentsController {
 
     @Get('byGame/:gameId')
     async getCommentsByGameId(@Param('gameId') gameId: string) {
-        return prisma.comment.findMany({ where: { gameId: gameId } });
+        return prisma.comment.findMany({ where: { gameId: parseInt(gameId) } });
     }
 
     @Post()

@@ -24,15 +24,14 @@ model Game {
   gameType     String
   thumbnailUrl String
   likes        Int
-  comments     Comment[]
+  comments     Comment[] @relation("GameToComment")
 }
 
-// Comment model
 model Comment {
-  id      Int    @id @default(autoincrement())
+  id      Int      @id @default(autoincrement())
   userId  String
   comment String
-  date    String
-  game    Game   @relation(fields: [id], references: [id])
-  gameId  String
+  date    DateTime
+  gameId  Int
+  game    Game     @relation("GameToComment", fields: [gameId], references: [id])
 }
