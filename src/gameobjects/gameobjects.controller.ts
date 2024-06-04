@@ -1,18 +1,31 @@
-// GameObject Controller
 import { Controller, Get, Post, Delete, Param, Body, Put } from '@nestjs/common';
 import { R2Service } from '../services/r2/r2.service';
 import { v4 as uuidv4 } from 'uuid';
 
+/**
+ * Controller to manage game objects associated with a specific game.
+ */
 @Controller('games/:gameId/gameObjects')
 export class GameObjectsController {
     constructor(private readonly r2Service: R2Service) { }
 
+    /**
+     * Creates a new game object for a specified game.
+     * @param {string} gameId - The ID of the game.
+     * @param {any} body - The data of the game object to be created.
+     * @returns {Promise<any>} - The result of the upload operation.
+     */
     @Post()
     async createGameObject(@Param('gameId') gameId: string, @Body() body: any) {
         const key = `game-${gameId}/gameObjects/${uuidv4()}`;
         return this.r2Service.uploadFile('plock-games', key, JSON.stringify(body));
     }
 
+    /**
+     * Retrieves all game objects associated with a specified game.
+     * @param {string} gameId - The ID of the game.
+     * @returns {Promise<any[]>} - A list of game objects.
+     */
     @Get()
     async getAllGameObjectsByGame(@Param('gameId') gameId: string) {
         const prefix = `game-${gameId}/gameObjects/`;
@@ -25,12 +38,25 @@ export class GameObjectsController {
         return gameObjects;
     }
 
+    /**
+     * Deletes a specific game object associated with a specified game.
+     * @param {string} gameId - The ID of the game.
+     * @param {string} id - The ID of the game object to be deleted.
+     * @returns {Promise<any>} - The result of the delete operation.
+     */
     @Delete(':id')
     async deleteGameObject(@Param('gameId') gameId: string, @Param('id') id: string) {
         const key = `game-${gameId}/gameObjects/${id}`;
         return this.r2Service.deleteFile('plock-games', key);
     }
 
+    /**
+     * Updates a specific game object associated with a specified game.
+     * @param {string} gameId - The ID of the game.
+     * @param {string} id - The ID of the game object to be updated.
+     * @param {any} body - The new data for the game object.
+     * @returns {Promise<any>} - The result of the update operation.
+     */
     @Put(':id')
     async updateGameObject(@Param('gameId') gameId: string, @Param('id') id: string, @Body() body: any) {
         const key = `game-${gameId}/gameObjects/${id}`;
