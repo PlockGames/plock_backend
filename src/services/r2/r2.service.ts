@@ -13,6 +13,10 @@ import { Readable } from 'stream';
 export class R2Service {
   private readonly s3Client: S3Client;
 
+  /**
+   * Constructs an instance of R2Service and initializes the S3Client with credentials and endpoint.
+   * @param {ConfigService} configService - The configuration service to retrieve R2 credentials and endpoint.
+   */
   constructor(private configService: ConfigService) {
     const apiToken = this.configService.get<string>('R2_API_TOKEN');
 
@@ -41,6 +45,13 @@ export class R2Service {
     );
   }
 
+  /**
+   * Uploads a file to the specified bucket with the given key.
+   * @param {string} bucket - The name of the bucket.
+   * @param {string} key - The key (path) for the file.
+   * @param {Buffer | Uint8Array | Blob | string} body - The content of the file to upload.
+   * @returns {Promise<object>} The response from the S3 service.
+   */
   async uploadFile(
     bucket: string,
     key: string,
@@ -55,6 +66,13 @@ export class R2Service {
     return this.s3Client.send(command);
   }
 
+  /**
+   * Lists files in the specified bucket with the given prefix.
+   * @param {string} bucket - The name of the bucket.
+   * @param {string} prefix - The prefix to filter files.
+   * @returns {Promise<string[]>} A list of file keys.
+   * @throws {Error} If no files are found.
+   */
   async listFiles(bucket: string, prefix: string) {
     const command = new ListObjectsV2Command({
       Bucket: bucket,
@@ -67,6 +85,12 @@ export class R2Service {
     return data.Contents.map((item) => item.Key);
   }
 
+  /**
+   * Retrieves a file from the specified bucket with the given key.
+   * @param {string} bucket - The name of the bucket.
+   * @param {string} key - The key (path) for the file.
+   * @returns {Promise<object>} The file content and its content type.
+   */
   async getFile(bucket: string, key: string) {
     const command = new GetObjectCommand({
       Bucket: bucket,
@@ -89,6 +113,12 @@ export class R2Service {
     return { Body: buffer, ContentType: response.ContentType };
   }
 
+  /**
+   * Deletes a file from the specified bucket with the given key.
+   * @param {string} bucket - The name of the bucket.
+   * @param {string} key - The key (path) for the file.
+   * @returns {Promise<object>} The response from the S3 service.
+   */
   async deleteFile(bucket: string, key: string) {
     const command = new DeleteObjectCommand({
       Bucket: bucket,
@@ -97,6 +127,13 @@ export class R2Service {
     return this.s3Client.send(command);
   }
 
+  /**
+   * Updates a file in the specified bucket with the given key.
+   * @param {string} bucket - The name of the bucket.
+   * @param {string} key - The key (path) for the file.
+   * @param {Buffer | Uint8Array | Blob | string} body - The new content of the file.
+   * @returns {Promise<object>} The response from the S3 service.
+   */
   async updateFile(
     bucket: string,
     key: string,

@@ -6,6 +6,8 @@ import {
   Delete,
   Param,
   Body,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 
@@ -26,7 +28,14 @@ export class GamesController {
    */
   @Get()
   async getAllGames() {
-    return prisma.game.findMany();
+    try {
+      return await prisma.game.findMany();
+    } catch (error) {
+      throw new HttpException(
+        `Failed to retrieve games: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   /**
@@ -37,7 +46,20 @@ export class GamesController {
    */
   @Get(':id')
   async getGameById(@Param('id') id: string) {
-    return prisma.game.findUnique({ where: { id: parseInt(id) } });
+    try {
+      const game = await prisma.game.findUnique({
+        where: { id: parseInt(id) },
+      });
+      if (!game) {
+        throw new HttpException('Game not found', HttpStatus.NOT_FOUND);
+      }
+      return game;
+    } catch (error) {
+      throw new HttpException(
+        `Failed to retrieve game: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   /**
@@ -48,7 +70,14 @@ export class GamesController {
    */
   @Post()
   async createGame(@Body() gameData: any) {
-    return prisma.game.create({ data: gameData });
+    try {
+      return await prisma.game.create({ data: gameData });
+    } catch (error) {
+      throw new HttpException(
+        `Failed to create game: ${error.message}`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 
   /**
@@ -60,7 +89,21 @@ export class GamesController {
    */
   @Put(':id')
   async updateGame(@Param('id') id: string, @Body() gameData: any) {
-    return prisma.game.update({ where: { id: parseInt(id) }, data: gameData });
+    try {
+      return await prisma.game.update({
+        where: { id: parseInt(id) },
+        data: gameData,
+      });
+    } catch (error) {
+      if (error.code === 'P2025') {
+        // Prisma error code for record not found
+        throw new HttpException('Game not found', HttpStatus.NOT_FOUND);
+      }
+      throw new HttpException(
+        `Failed to update game: ${error.message}`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 
   /**
@@ -71,6 +114,17 @@ export class GamesController {
    */
   @Delete(':id')
   async deleteGame(@Param('id') id: string) {
-    return prisma.game.delete({ where: { id: parseInt(id) } });
+    try {
+      return await prisma.game.delete({ where: { id: parseInt(id) } });
+    } catch (error) {
+      if (error.code === 'P2025') {
+        // Prisma error code for record not found
+        throw new HttpException('Game not found', HttpStatus.NOT_FOUND);
+      }
+      throw new HttpException(
+        `Failed to delete game: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

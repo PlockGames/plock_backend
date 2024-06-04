@@ -6,6 +6,8 @@ import {
   Param,
   Body,
   Put,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { R2Service } from '../services/r2/r2.service';
 import { v4 as uuidv4 } from 'uuid';
@@ -25,8 +27,19 @@ export class GameObjectsController {
    */
   @Post()
   async createGameObject(@Param('gameId') gameId: string, @Body() body: any) {
-    const key = `game-${gameId}/gameObjects/${uuidv4()}`;
-    return this.r2Service.uploadFile('plock-games', key, JSON.stringify(body));
+    try {
+      const key = `game-${gameId}/gameObjects/${uuidv4()}`;
+      return await this.r2Service.uploadFile(
+        'plock-games',
+        key,
+        JSON.stringify(body),
+      );
+    } catch (error) {
+      throw new HttpException(
+        `Failed to create game object: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   /**
@@ -36,16 +49,23 @@ export class GameObjectsController {
    */
   @Get()
   async getAllGameObjectsByGame(@Param('gameId') gameId: string) {
-    const prefix = `game-${gameId}/gameObjects/`;
-    const keys = await this.r2Service.listFiles('plock-games', prefix);
-    const gameObjects = await Promise.all(
-      keys.map(async (key) => {
-        const file = await this.r2Service.getFile('plock-games', key);
-        const body = JSON.parse(file.Body.toString()); // Convert Buffer to string and parse JSON
-        return { key, ...body };
-      }),
-    );
-    return gameObjects;
+    try {
+      const prefix = `game-${gameId}/gameObjects/`;
+      const keys = await this.r2Service.listFiles('plock-games', prefix);
+      const gameObjects = await Promise.all(
+        keys.map(async (key) => {
+          const file = await this.r2Service.getFile('plock-games', key);
+          const body = JSON.parse(file.Body.toString()); // Convert Buffer to string and parse JSON
+          return { key, ...body };
+        }),
+      );
+      return gameObjects;
+    } catch (error) {
+      throw new HttpException(
+        `Failed to retrieve game objects: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   /**
@@ -59,8 +79,15 @@ export class GameObjectsController {
     @Param('gameId') gameId: string,
     @Param('id') id: string,
   ) {
-    const key = `game-${gameId}/gameObjects/${id}`;
-    return this.r2Service.deleteFile('plock-games', key);
+    try {
+      const key = `game-${gameId}/gameObjects/${id}`;
+      return await this.r2Service.deleteFile('plock-games', key);
+    } catch (error) {
+      throw new HttpException(
+        `Failed to delete game object: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   /**
@@ -76,7 +103,18 @@ export class GameObjectsController {
     @Param('id') id: string,
     @Body() body: any,
   ) {
-    const key = `game-${gameId}/gameObjects/${id}`;
-    return this.r2Service.updateFile('plock-games', key, JSON.stringify(body));
+    try {
+      const key = `game-${gameId}/gameObjects/${id}`;
+      return await this.r2Service.updateFile(
+        'plock-games',
+        key,
+        JSON.stringify(body),
+      );
+    } catch (error) {
+      throw new HttpException(
+        `Failed to update game object: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }
