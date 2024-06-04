@@ -38,7 +38,10 @@ describe('GamesController', () => {
 
   describe('getAllGames', () => {
     it('should return all games', async () => {
-      const mockGames = [{ id: 1, title: 'Game 1' }, { id: 2, title: 'Game 2' }];
+      const mockGames = [
+        { id: 1, title: 'Game 1' },
+        { id: 2, title: 'Game 2' },
+      ];
       (prisma.game.findMany as jest.Mock).mockResolvedValue(mockGames);
 
       const result = await controller.getAllGames();
@@ -46,9 +49,13 @@ describe('GamesController', () => {
     });
 
     it('should handle errors', async () => {
-      (prisma.game.findMany as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (prisma.game.findMany as jest.Mock).mockRejectedValue(
+        new Error('Database error'),
+      );
 
-      await expect(controller.getAllGames()).rejects.toThrowError('Database error');
+      await expect(controller.getAllGames()).rejects.toThrowError(
+        'Database error',
+      );
     });
   });
 
@@ -69,9 +76,13 @@ describe('GamesController', () => {
     });
 
     it('should handle errors', async () => {
-      (prisma.game.findUnique as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (prisma.game.findUnique as jest.Mock).mockRejectedValue(
+        new Error('Database error'),
+      );
 
-      await expect(controller.getGameById('1')).rejects.toThrowError('Database error');
+      await expect(controller.getGameById('1')).rejects.toThrowError(
+        'Database error',
+      );
     });
   });
 
@@ -86,9 +97,13 @@ describe('GamesController', () => {
 
     it('should handle errors', async () => {
       const newGame = { title: 'New Game', gameId: '1234' };
-      (prisma.game.create as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (prisma.game.create as jest.Mock).mockRejectedValue(
+        new Error('Database error'),
+      );
 
-      await expect(controller.createGame(newGame)).rejects.toThrowError('Database error');
+      await expect(controller.createGame(newGame)).rejects.toThrowError(
+        'Database error',
+      );
     });
   });
 
@@ -111,9 +126,13 @@ describe('GamesController', () => {
 
     it('should handle errors', async () => {
       const updatedGame = { id: 1, title: 'Updated Game' };
-      (prisma.game.update as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (prisma.game.update as jest.Mock).mockRejectedValue(
+        new Error('Database error'),
+      );
 
-      await expect(controller.updateGame('1', updatedGame)).rejects.toThrowError('Database error');
+      await expect(
+        controller.updateGame('1', updatedGame),
+      ).rejects.toThrowError('Database error');
     });
   });
 
@@ -133,9 +152,13 @@ describe('GamesController', () => {
     });
 
     it('should handle errors', async () => {
-      (prisma.game.delete as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (prisma.game.delete as jest.Mock).mockRejectedValue(
+        new Error('Database error'),
+      );
 
-      await expect(controller.deleteGame('1')).rejects.toThrowError('Database error');
+      await expect(controller.deleteGame('1')).rejects.toThrowError(
+        'Database error',
+      );
     });
   });
 });

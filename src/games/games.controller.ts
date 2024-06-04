@@ -1,7 +1,15 @@
-import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client'
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Body,
+} from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 /**
  * @class GamesController
@@ -9,7 +17,7 @@ const prisma = new PrismaClient()
  */
 @Controller('games')
 export class GamesController {
-  constructor() { } // Inject Prisma service
+  constructor() {} // Inject Prisma service
 
   /**
    * @method getAllGames

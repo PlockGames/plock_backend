@@ -14,7 +14,13 @@ import { GameObjectsController } from './gameobjects/gameobjects.controller';
       isGlobal: true, // Make ConfigModule globally available
     }),
   ],
-  controllers: [AppController, GamesController, CommentsController, WinConditionsController, GameObjectsController],
+  controllers: [
+    AppController,
+    GamesController,
+    CommentsController,
+    WinConditionsController,
+    GameObjectsController,
+  ],
   providers: [AppService, R2Service],
 })
-export class AppModule { }
+export class AppModule {}
