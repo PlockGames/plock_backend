@@ -14,19 +14,19 @@ datasource db {
 }
 
 model Game {
-  id           Int       @id @default(autoincrement())
-  title        String
-  tags         String[]
-  creatorId    Int
-  creationDate DateTime
-  gameUrl      String
-  playTime     String
-  gameType     String
-  thumbnailUrl String
-  likes        Int
-  comments     Comment[]
-  // GameObject   GameObject[]
-  // WinCondition WinCondition[]
+  id             Int       @id @default(autoincrement())
+  title          String
+  tags           String[]
+  creatorId      Int
+  creationDate   DateTime
+  gameUrl        String
+  playTime       String
+  gameType       String
+  thumbnailUrl   String
+  likes          Int
+  comments       Comment[]
+  gameObjectId   Int[]
+  winConditionId Int[]
 }
 
 // Comment model
@@ -38,31 +38,3 @@ model Comment {
   game    Game   @relation(fields: [id], references: [id])
   gameId  String
 }
-
-// // GameObject model
-// model GameObject {
-//   id        Int    @id @default(autoincrement())
-//   objectId  String @unique
-//   type      String
-//   positionX Float
-//   positionY Float
-//   spriteUrl String
-//   width     Float
-//   height    Float
-//   speed     Float
-//   force     Float
-//   direction String
-//   game      Game   @relation(fields: [id], references: [id])
-//   gameId    String
-// }
-
-// // WinCondition model
-// model WinCondition {
-//   id            Int      @id @default(autoincrement())
-//   type          String
-//   requiredItems String[]
-//   targetX       Float
-//   targetY       Float
-//   game          Game     @relation(fields: [id], references: [id])
-//   gameId        String
-// }
