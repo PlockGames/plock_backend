@@ -1,0 +1,51 @@
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:15
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    networks:
+      - nest-net
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  nestjs-api:
+    depends_on:
+      postgres:
+        condition: service_healthy
+    container_name: nestjs-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    env_file:
+      - .env
+    environment:
+      - PORT=3000
+      - NODE_ENV=development
+    volumes:
+      - ./src:/usr/src/app/src
+    networks:
+      - nest-net
+    stdin_open: true # docker run -i
+    tty: true # docker run -t
+
+networks:
+  nest-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
