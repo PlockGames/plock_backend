@@ -23,13 +23,17 @@ export class GamesController {
 
   /**
    * @method getAllGames
-   * @description Route handler to get all games
+   * @description Route handler to get all games sorted by creation date (most recent first)
    * @returns {Promise} Returns a promise that resolves with all games
    */
   @Get()
   async getAllGames() {
     try {
-      return await prisma.game.findMany();
+      return await prisma.game.findMany({
+        orderBy: {
+          creationDate: 'desc',
+        },
+      });
     } catch (error) {
       throw new HttpException(
         `Failed to retrieve games: ${error.message}`,
