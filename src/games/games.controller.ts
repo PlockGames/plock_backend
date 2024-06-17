@@ -21,6 +21,7 @@ export class GamesController {
   @Get()
   async getAllGames(@Param('page') page?: number) {
     try {
+      console.log(page);
       if (page) {
         return await prisma.game.findMany({
           orderBy: {
