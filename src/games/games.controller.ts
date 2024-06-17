@@ -19,8 +19,17 @@ export class GamesController {
    * @returns {Promise} Returns a promise that resolves with all games
    */
   @Get()
-  async getAllGames() {
+  async getAllGames(@Param('page') page?: number) {
     try {
+      if (page) {
+        return await prisma.game.findMany({
+          orderBy: {
+            creationDate: 'desc',
+          },
+          skip: (page - 1) * 3,
+          take: 3,
+        });
+      }
       return await prisma.game.findMany({
         orderBy: {
           creationDate: 'desc',
