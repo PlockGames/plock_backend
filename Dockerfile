@@ -9,4 +9,4 @@ COPY . .
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "yarn prisma migrate reset --force && yarn run start:dev"]
+CMD ["sh", "-c", "yarn prisma migrate reset --force && yarn run start"]
