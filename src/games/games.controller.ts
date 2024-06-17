@@ -1,4 +1,4 @@
-import {Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post, Put,} from '@nestjs/common';
+import {Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post, Put, Query,} from '@nestjs/common';
 import {PrismaClient} from '@prisma/client';
 import {CreateGameDto, UpdateGameDto} from '../dto/game.dto';
 import {R2Service} from "../services/r2/r2.service";
@@ -19,7 +19,7 @@ export class GamesController {
    * @returns {Promise} Returns a promise that resolves with all games
    */
   @Get()
-  async getAllGames(@Param('page') page?: number) {
+  async getAllGames(@Query('page') page?: number) {
     try {
       console.log(page);
       if (page) {
