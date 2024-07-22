@@ -43,4 +43,4 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Build Docker image
-        run: docker buildx build -t  plock_backend:latest
+        run: docker buildx build -t plock_backend:latest .
