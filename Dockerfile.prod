@@ -1,8 +1,5 @@
 FROM node:21
 
-#Yarn installation
-RUN npm install --global yarn
-
 
 #Set-up Working directory
 WORKDIR /usr/src/app

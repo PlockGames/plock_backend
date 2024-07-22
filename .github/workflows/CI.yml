@@ -31,6 +31,7 @@ jobs:
         run: yarn test
 
   docker_build:
+    needs: Prebuild-test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
