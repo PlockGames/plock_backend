@@ -5,15 +5,12 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { CommentModule } from './comment/comment.module';
 import { R2Module } from './r2/r2module';
-import { WinConditionsModule } from './winconditions/winconditions.module';
-import { GameObjectsModule } from './gameobjects/gameobjects.module';
+import { WinConditionsModule } from './to-see-how-implement/winconditions/winconditions.module';
+import { GameObjectsModule } from './to-see-how-implement/gameobjects/gameobjects.module';
 import { GamesModule } from './games/games.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
     UserModule,
     PrismaModule,
     AuthModule,
