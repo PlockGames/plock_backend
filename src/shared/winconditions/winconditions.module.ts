@@ -6,6 +6,5 @@ import { R2Service } from 'src/shared/r2/r2.service';
 @Module({
   imports: [R2Module],
   controllers: [WinConditionsController],
-  providers: [R2Service],
 })
 export class WinConditionsModule {}

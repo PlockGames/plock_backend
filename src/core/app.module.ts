@@ -1,15 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { GamesController } from '../features/games/games.controller';
-import { WinConditionsController } from '../shared/winconditions/winconditions.controller';
-import { GameObjectsController } from '../features/gameobjects/gameobjects.controller';
 import { UserModule } from '../features/user/user.module';
 import { PrismaModule } from '../shared/prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { CommentModule } from '../features/comment/comment.module';
 import { R2Module } from '../shared/r2/r2module';
-import { R2Service } from '../shared/r2/r2.service';
 import { WinConditionsModule } from '../shared/winconditions/winconditions.module';
+import { GameObjectsModule } from '../shared/gameobjects/gameobjects.module';
+import { GamesModule } from '../features/games/games.module';
 
 @Module({
   imports: [
@@ -18,15 +16,13 @@ import { WinConditionsModule } from '../shared/winconditions/winconditions.modul
     }),
     UserModule,
     PrismaModule,
+
     AuthModule,
     CommentModule,
     R2Module,
-    WinConditionsModule
+    WinConditionsModule,
+    GameObjectsModule,
+    GamesModule,
   ],
-  controllers: [
-    GamesController,
-    GameObjectsController,
-  ],
-  providers: [R2Service],
 })
 export class AppModule {}
