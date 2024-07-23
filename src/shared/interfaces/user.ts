@@ -5,12 +5,12 @@ export interface IUser {
   email: string;
   password: string;
   phoneNumber: string;
-  role: Role;
+  role: UserRole;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export enum Role {
+export enum UserRole {
   ADMIN = 'ADMIN',
   USER = 'USER',
 }
