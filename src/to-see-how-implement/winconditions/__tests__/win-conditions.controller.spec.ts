@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { WinConditionsController } from '../winconditions.controller';
-import { R2Service } from '../../services/r2/r2.service';
-import { v4 as uuidv4 } from 'uuid';
+import { R2Service } from '../../../r2/r2.service';
 
 jest.mock('uuid', () => ({
   v4: jest.fn(() => 'test-uuid'),
