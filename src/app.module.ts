@@ -6,6 +6,8 @@ import { CommentsController } from './comments/comments.controller';
 import { WinConditionsController } from './winconditions/winconditions.controller';
 import { GameObjectsController } from './gameobjects/gameobjects.controller';
 import { UserModule } from './user/user.module';
+import { PrismaModule } from './prisma/prisma.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -13,6 +15,8 @@ import { UserModule } from './user/user.module';
       isGlobal: true, // Make ConfigModule globally available
     }),
     UserModule,
+    PrismaModule,
+    AuthModule,
   ],
   controllers: [
     GamesController,
