@@ -13,21 +13,27 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
+enum UserRole {
   USER
   ADMIN
 }
 
 model User {
-  id          Int      @id @default(autoincrement())
-  firstName   String
-  lastName    String
-  email       String   @unique
-  password    String
-  phoneNumber String   @unique
-  role        Role     @default(USER)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String    @id @default(uuid())
+  username     String?   @unique
+  firstName    String?
+  lastName     String?
+  email        String    @unique
+  password     String?
+  phoneNumber  String?   @unique
+  birthDate    String?
+  role         UserRole  @default(USER)
+  privacy      Boolean   @default(false)
+  refreshToken String?
+  pofilePic    String?
+  lastLogin    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 model Game {
