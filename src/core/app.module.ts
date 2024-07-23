@@ -8,6 +8,7 @@ import { PrismaModule } from '../shared/prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { CommentModule } from '../features/comment/comment.module';
 import { R2Module } from '../shared/r2/r2module';
+import { R2Service } from 'src/shared/r2/r2.service';
 
 @Module({
   imports: [
@@ -25,5 +26,6 @@ import { R2Module } from '../shared/r2/r2module';
     WinConditionsController,
     GameObjectsController,
   ],
+  providers: [R2Service],
 })
 export class AppModule {}
