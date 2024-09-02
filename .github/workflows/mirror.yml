@@ -1,7 +1,7 @@
 name: Push on Epitech repository
 
 env:
-  EPITECH_REPO: "T-ESP-800-project_esp800-56365-TLS-tiktok_game"
+  EPITECH_REPO: "T-ESP-901-60373-TLS-tiktok_game-2"
 
 
 on:
