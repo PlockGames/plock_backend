@@ -1,15 +1,14 @@
 name: Push on Epitech repository
 
 env:
-  EPITECH_REPO: "T-ESP-800-project_esp800-56365-TLS-tiktok_game"
-
+  EPITECH_REPO: 'T-ESP-901-60373-TLS-tiktok_game-2'
 
 on:
   push:
     branches:
-      - develop  
-      - main   
-jobs: 
+      - develop
+      - main
+jobs:
   mirror:
     if: github.repository == 'PlockGames/plock_backend'
     runs-on: ubuntu-latest
@@ -23,9 +22,8 @@ jobs:
       - name: Extract branch name
         id: extract_branch
         run: echo "::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/})"
-  
-  
-        #Clone le repo Epitech 
+
+        #Clone le repo Epitech
       - name: Clone Epitech repo
         uses: GuillaumeFalourd/clone-github-repo-action@v2.3
         with:
@@ -33,8 +31,8 @@ jobs:
           repository: ${{ env.EPITECH_REPO }}
           branch: ${{ steps.extract_branch.outputs.branch }}
           access-token: ${{ secrets.AUTOMNE_TOKEN }}
-    
-      - name: Copy code from commit to the cloned repo and git push 
+
+      - name: Copy code from commit to the cloned repo and git push
         run: |
           #Supprime le dossier back back pré existant dans le but d'en recréer un nouveau et de copier le code du commit dedans
           rm -rf $EPITECH_REPO/back/
@@ -54,7 +52,7 @@ jobs:
           cd $EPITECH_REPO/back
           git config --local user.email "$GITHUB_ACTOR_EMAIL"
           git config --local user.name "$GITHUB_ACTOR"
-          
+
           #Ajoutes tout le code et le commit
           git add .*
           git add *
@@ -64,5 +62,3 @@ jobs:
           GITHUB_REF: ${{ github.ref }}
           GITHUB_ACTOR: ${{ github.actor}}
           GITHUB_ACTOR_EMAIL: ${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com
-
-          
