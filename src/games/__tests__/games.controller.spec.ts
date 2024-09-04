@@ -3,8 +3,9 @@ import { GamesController } from '../games.controller';
 import { PrismaClient } from '@prisma/client';
 import { HttpException } from '@nestjs/common';
 import { CreateGameDto, UpdateGameDto } from '../../dto/game.dto';
-import { R2Service } from '../../services/r2/r2.service';
+import { R2Service } from '../../r2/r2.service';
 import { ConfigService } from '@nestjs/config';
+import { PrismaService } from '../../prisma/prisma.service';
 
 jest.mock('@aws-sdk/client-s3', () => {
   const mS3Client = {
@@ -40,16 +41,18 @@ describe('GamesController', () => {
   let controller: GamesController;
   let prisma: PrismaClient;
   let r2Service: R2Service;
+  let prismaService: PrismaService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [GamesController],
-      providers: [PrismaClient, R2Service, ConfigService],
+      providers: [PrismaClient, R2Service, ConfigService, PrismaService],
     }).compile();
 
     controller = module.get<GamesController>(GamesController);
     prisma = module.get<PrismaClient>(PrismaClient);
     r2Service = module.get<R2Service>(R2Service);
+    prismaService = module.get<PrismaService>(PrismaService);
   });
 
   describe('getAllGames', () => {
