@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { CreateGameDto, UpdateGameDto } from '../dto/game.dto';
 import { R2Service } from '../r2/r2.service';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 /**
  * @class GamesController
