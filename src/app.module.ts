@@ -1,22 +1,36 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
-import { GamesController } from './games/games.controller';
-import { R2Service } from './services/r2/r2.service';
-import { CommentsController } from './comments/comments.controller';
+import { UserModule } from './user/user.module';
+import { PrismaModule } from './prisma/prisma.module';
+import { AuthModule } from './auth/auth.module';
+import { CommentModule } from './comment/comment.module';
+import { R2Module } from './r2/r2module';
+import { WinConditionsModule } from './to-see-how-implement/winconditions/winconditions.module';
+import { GameObjectsModule } from './to-see-how-implement/gameobjects/gameobjects.module';
+import { GamesModule } from './games/games.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './auth/guards/jwt.guards';
+import { UserTypeGuard } from './auth/guards/user-type.guard';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true, // Make ConfigModule globally available
-    }),
+    UserModule,
+    PrismaModule,
+    AuthModule,
+    CommentModule,
+    R2Module,
+    WinConditionsModule,
+    GameObjectsModule,
+    GamesModule,
   ],
-  controllers: [
-    AppController,
-    GamesController,
-    CommentsController,
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: UserTypeGuard,
+    },
   ],
-  providers: [AppService, R2Service],
 })
 export class AppModule {}

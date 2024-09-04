@@ -2,9 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { GamesController } from '../games.controller';
 import { PrismaClient } from '@prisma/client';
 import { HttpException } from '@nestjs/common';
-import {CreateGameDto, UpdateGameDto} from "../../dto/game.dto";
-import {R2Service} from "../../services/r2/r2.service";
-import {ConfigService} from "@nestjs/config";
+import { CreateGameDto, UpdateGameDto } from '../../dto/game.dto';
+import { R2Service } from '../../services/r2/r2.service';
+import { ConfigService } from '@nestjs/config';
 
 jest.mock('@aws-sdk/client-s3', () => {
   const mS3Client = {
@@ -99,15 +99,15 @@ describe('GamesController', () => {
     it('should create a new game', async () => {
       const prismadata = {
         creatorId: 1,
-        gameType: "Action",
-        tags: ["action", "truc"],
-        playTime: "12345",
-        title: "my game",
-        thumbnailUrl: "https://mygame.com",
-      }
-      const gameData : CreateGameDto = {
-        data: "my game content",
-        ...prismadata
+        gameType: 'Action',
+        tags: ['action', 'truc'],
+        playTime: '12345',
+        title: 'my game',
+        thumbnailUrl: 'https://mygame.com',
+      };
+      const gameData: CreateGameDto = {
+        data: 'my game content',
+        ...prismadata,
       };
 
       const result = { id: 1, likes: 0, ...prismadata };
@@ -119,7 +119,9 @@ describe('GamesController', () => {
     it('should throw a bad request exception if there is an error', async () => {
       (prisma.game.create as jest.Mock).mockRejectedValue(new Error('Error'));
 
-      await expect(controller.createGame({} as CreateGameDto)).rejects.toThrow(HttpException);
+      await expect(controller.createGame({} as CreateGameDto)).rejects.toThrow(
+        HttpException,
+      );
       expect(prisma.game.create).toHaveBeenCalled();
     });
   });
@@ -127,16 +129,16 @@ describe('GamesController', () => {
   describe('updateGame', () => {
     it('should update an existing game', async () => {
       const gameData: UpdateGameDto = {
-        data: "My great game content",
-        gameType: "Action",
-        tags: ["action", "truc"],
+        data: 'My great game content',
+        gameType: 'Action',
+        tags: ['action', 'truc'],
         creatorId: 1,
         likes: 0,
-        playTime: "12345",
-        thumbnailUrl: "https://mygame.com",
-        title: "My great game",
+        playTime: '12345',
+        thumbnailUrl: 'https://mygame.com',
+        title: 'My great game',
       };
-      const result = { id: "1", ...gameData };
+      const result = { id: '1', ...gameData };
       (prisma.game.update as jest.Mock).mockResolvedValue(result);
       (prisma.game.findUnique as jest.Mock).mockResolvedValue({ gameData });
 
@@ -149,18 +151,18 @@ describe('GamesController', () => {
       (error as any).code = 'P2025';
       (prisma.game.update as jest.Mock).mockRejectedValue(error);
 
-      await expect(controller.updateGame('1', {} as UpdateGameDto)).rejects.toThrow(
-        HttpException,
-      );
+      await expect(
+        controller.updateGame('1', {} as UpdateGameDto),
+      ).rejects.toThrow(HttpException);
       expect(prisma.game.update).toHaveBeenCalled();
     });
 
     it('should throw a bad request exception if there is an error', async () => {
       (prisma.game.update as jest.Mock).mockRejectedValue(new Error('Error'));
 
-      await expect(controller.updateGame('1', {} as UpdateGameDto)).rejects.toThrow(
-        HttpException,
-      );
+      await expect(
+        controller.updateGame('1', {} as UpdateGameDto),
+      ).rejects.toThrow(HttpException);
       expect(prisma.game.update).toHaveBeenCalled();
     });
   });

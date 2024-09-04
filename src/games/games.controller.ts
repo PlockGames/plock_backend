@@ -1,9 +1,18 @@
-import {Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post, Put, Query,} from '@nestjs/common';
-import {PrismaClient} from '@prisma/client';
-import {CreateGameDto, UpdateGameDto} from '../dto/game.dto';
-import {R2Service} from "../services/r2/r2.service";
-
-const prisma = new PrismaClient();
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpException,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
+import { CreateGameDto, UpdateGameDto } from '../dto/game.dto';
+import { R2Service } from '../r2/r2.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 /**
  * @class GamesController
@@ -11,7 +20,10 @@ const prisma = new PrismaClient();
  */
 @Controller('games')
 export class GamesController {
-  constructor(private readonly r2Service: R2Service) {} // Inject Prisma service
+  constructor(
+    private readonly r2Service: R2Service,
+    private prisma: PrismaService,
+  ) {} // Inject Prisma service
 
   /**
    * @method getAllGames
@@ -22,7 +34,7 @@ export class GamesController {
   async getAllGames(@Query('page') page?: number) {
     try {
       if (page) {
-        return await prisma.game.findMany({
+        return await this.prisma.game.findMany({
           orderBy: {
             creationDate: 'desc',
           },
@@ -30,7 +42,7 @@ export class GamesController {
           take: 3,
         });
       }
-      return await prisma.game.findMany({
+      return await this.prisma.game.findMany({
         orderBy: {
           creationDate: 'desc',
         },
@@ -52,7 +64,7 @@ export class GamesController {
   @Get(':id')
   async getGameById(@Param('id') id: string) {
     try {
-      const game = await prisma.game.findUnique({
+      const game = await this.prisma.game.findUnique({
         where: { id: parseInt(id) },
       });
       if (!game) {
@@ -76,13 +88,13 @@ export class GamesController {
   @Get('full/:id')
   async getGameWithDataById(@Param('id') id: string) {
     try {
-      const game = await prisma.game.findUnique({
+      const game = await this.prisma.game.findUnique({
         where: { id: parseInt(id) },
       });
       if (!game) {
         throw new HttpException('Game not found', HttpStatus.NOT_FOUND);
       }
-      const data = await this.r2Service.getFile("plock-games", game.gameUrl);
+      const data = await this.r2Service.getFile('plock-games', game.gameUrl);
 
       return {
         ...game,
@@ -90,8 +102,8 @@ export class GamesController {
       };
     } catch (error) {
       throw new HttpException(
-          `Failed to retrieve game: ${error.message}`,
-          HttpStatus.INTERNAL_SERVER_ERROR,
+        `Failed to retrieve game: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -106,20 +118,24 @@ export class GamesController {
   async createGame(@Body() gameData: CreateGameDto) {
     try {
       const uid = crypto.randomUUID();
-      const data = await this.r2Service.uploadFile("plock-games", uid + ".json", gameData.data);
+      await this.r2Service.uploadFile(
+        'plock-games',
+        uid + '.json',
+        gameData.data,
+      );
 
-      return await prisma.game.create({
+      return await this.prisma.game.create({
         data: {
           title: gameData.title,
           tags: gameData.tags,
           creatorId: gameData.creatorId,
           creationDate: new Date(),
-          gameUrl: uid + ".json",
+          gameUrl: uid + '.json',
           playTime: gameData.playTime,
           gameType: gameData.gameType,
           thumbnailUrl: gameData.thumbnailUrl,
           likes: 0,
-        }
+        },
       });
     } catch (error) {
       throw new HttpException(
@@ -140,19 +156,23 @@ export class GamesController {
   async updateGame(@Param('id') id: string, @Body() gameData: UpdateGameDto) {
     try {
       const uid = crypto.randomUUID();
-      const game = await prisma.game.findUnique({
+      const game = await this.prisma.game.findUnique({
         where: { id: parseInt(id) },
       });
-      this.r2Service.deleteFile("plock-games", game.gameUrl);
-      await this.r2Service.uploadFile("plock-games", uid + ".json", gameData.data);
+      this.r2Service.deleteFile('plock-games', game.gameUrl);
+      await this.r2Service.uploadFile(
+        'plock-games',
+        uid + '.json',
+        gameData.data,
+      );
 
-      return await prisma.game.update({
+      return await this.prisma.game.update({
         where: { id: parseInt(id) },
         data: {
           title: gameData.title,
           tags: gameData.tags,
           creatorId: gameData.creatorId,
-          gameUrl: uid + ".json",
+          gameUrl: uid + '.json',
           playTime: gameData.playTime,
           gameType: gameData.gameType,
           thumbnailUrl: gameData.thumbnailUrl,
@@ -180,11 +200,11 @@ export class GamesController {
   @Delete(':id')
   async deleteGame(@Param('id') id: string) {
     try {
-      const game = await prisma.game.findUnique({
+      const game = await this.prisma.game.findUnique({
         where: { id: parseInt(id) },
       });
-      this.r2Service.deleteFile("plock-games", game.gameUrl);
-      return await prisma.game.delete({ where: { id: parseInt(id) } });
+      this.r2Service.deleteFile('plock-games', game.gameUrl);
+      return await this.prisma.game.delete({ where: { id: parseInt(id) } });
     } catch (error) {
       if (error.code === 'P2025') {
         // Prisma error code for record not found
