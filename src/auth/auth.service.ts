@@ -58,8 +58,8 @@ export class AuthService {
       email: user.email,
     };
     return this.jwtService.signAsync(payload, {
+      secret: process.env.ACCESS_TOKEN_SECRET,
       expiresIn: process.env.ACCESS_TOKEN_EXPIRATION,
-      secret: process.env.SECRET_JWT_TOKEN,
     });
   }
 
@@ -69,7 +69,7 @@ export class AuthService {
       email: user.email,
     };
     return this.jwtService.signAsync(payload, {
-      secret: process.env.SECRET_JWT_TOKEN,
+      secret: process.env.REFRESH_TOKEN_SECRET,
       expiresIn: process.env.REFRESH_TOKEN_EXPIRATION,
     });
   }

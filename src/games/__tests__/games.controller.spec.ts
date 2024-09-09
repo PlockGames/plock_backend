@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { GamesController } from '../games.controller';
 import { PrismaClient } from '@prisma/client';
 import { HttpException } from '@nestjs/common';
-import { CreateGameDto, UpdateGameDto } from '../../dto/game.dto';
+import { CreateGameDto, UpdateGameDto } from '../game.dto';
 import { R2Service } from '../../r2/r2.service';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
