@@ -10,7 +10,7 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { CreateGameDto, UpdateGameDto } from '../dto/game.dto';
+import { CreateGameDto, UpdateGameDto } from './game.dto';
 import { R2Service } from '../r2/r2.service';
 import { PrismaService } from '../prisma/prisma.service';
 

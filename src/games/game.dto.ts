@@ -1,4 +1,4 @@
-import { CommentDto } from './comment.dto';
+import { CommentDto } from '../comment/comment.dto';
 
 export class GameWithoutIdDto {
   title: string;

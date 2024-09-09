@@ -13,12 +13,29 @@ import { User, UserRole } from '@prisma/client';
 import { UserCreateDto, UserUpdateDto } from './user.dto';
 import { ResponseRequest, responseRequest } from '../shared/utils/response';
 import { AuthorizedUser } from '../shared/decorators/user-type.decorator';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import {
+  GetUsersResponse,
+  GetUserResponse,
+  CreateUserResponse,
+  UpdateUserResponse,
+  DeleteUserResponse,
+} from '../shared/swagger/responses';
 
+@ApiTags('Users')
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
+  @ApiBearerAuth('JWT-auth')
+  @ApiResponse(GetUsersResponse)
+  @ApiOperation({ summary: 'List all users', description: 'List all users' })
   @AuthorizedUser(UserRole.ADMIN)
   public async list(): Promise<ResponseRequest<Partial<User>[]>> {
     const users = await this.userService.list();
@@ -26,6 +43,9 @@ export class UserController {
   }
 
   @Get(':id')
+  @ApiBearerAuth('JWT-auth')
+  @ApiResponse(GetUserResponse)
+  @ApiOperation({ summary: 'Get user by id', description: 'Get user by id' })
   @AuthorizedUser(UserRole.ADMIN)
   public async get(
     @Param('id') id: string,
@@ -35,6 +55,10 @@ export class UserController {
   }
 
   @Post()
+  @ApiBearerAuth('JWT-auth')
+  @ApiResponse(CreateUserResponse)
+  @ApiOperation({ summary: 'Create user', description: 'Create user' })
+  @AuthorizedUser(UserRole.ADMIN)
   public async create(
     @Body() user: UserCreateDto,
   ): Promise<ResponseRequest<Partial<User>>> {
@@ -47,6 +71,9 @@ export class UserController {
   }
 
   @Put(':id')
+  @ApiBearerAuth('JWT-auth')
+  @ApiResponse(UpdateUserResponse)
+  @ApiOperation({ summary: 'Update user', description: 'Update user' })
   @AuthorizedUser(UserRole.ADMIN)
   public async update(
     @Param('id') id: string,
@@ -61,6 +88,9 @@ export class UserController {
   }
 
   @Delete(':id')
+  @ApiBearerAuth('JWT-auth')
+  @ApiResponse(DeleteUserResponse)
+  @ApiOperation({ summary: 'Delete user', description: 'Delete user' })
   @AuthorizedUser(UserRole.ADMIN)
   public async delete(
     @Param('id') id: string,
