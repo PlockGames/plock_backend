@@ -116,6 +116,6 @@ export class AuthController {
     description: 'Get user profile',
   })
   payload(@Req() req: any): any {
-    return req.user;
+    return responseRequest('success', 'User profile', req.user);
   }
 }
