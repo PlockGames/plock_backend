@@ -8,7 +8,7 @@ import { User } from '@prisma/client';
 import { prismaExclude } from '../prisma/prisma-exclude';
 import { UserCreateDto, UserUpdateDto } from './user.dto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import { AuthParitalSignupDto } from '../auth/auth.dto';
+import { AuthCompleteSignUpDto, AuthParitalSignupDto } from '../auth/auth.dto';
 import * as bcrypt from 'bcrypt';
 @Injectable()
 export class UserService {
@@ -36,7 +36,10 @@ export class UserService {
     });
   }
 
-  public update(id: string, user: UserUpdateDto): Promise<Partial<User>> {
+  public update(
+    id: string,
+    user: UserUpdateDto | AuthCompleteSignUpDto,
+  ): Promise<Partial<User>> {
     return this.prisma.user.update({
       where: { id },
       data: user,

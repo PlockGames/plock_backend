@@ -19,22 +19,7 @@ export class AuthLoginDto {
   password: string;
 }
 
-export class AuthParitalSignupDto {
-  @ApiProperty({
-    type: 'string',
-    required: true,
-  })
-  @IsNotEmpty({ message: 'Email is required' })
-  @IsEmail()
-  @IsString()
-  email: string;
-  @ApiProperty({
-    type: 'string',
-    required: true,
-  })
-  @IsNotEmpty({ message: 'Password is required' })
-  @IsString()
-  password: string;
+export class AuthParitalSignupDto extends AuthLoginDto {
   @ApiProperty({
     type: 'string',
     required: true,
@@ -45,13 +30,6 @@ export class AuthParitalSignupDto {
 }
 
 export class AuthCompleteSignUpDto {
-  @ApiProperty({
-    type: 'string',
-    required: true,
-  })
-  @IsString({ message: 'Username must be a string' })
-  @IsNotEmpty({ message: 'Username must not be empty' })
-  username: string;
   @ApiProperty({
     type: 'string',
     required: true,
@@ -82,13 +60,12 @@ export class AuthCompleteSignUpDto {
   birthDate: string;
 }
 
-export class AdminDto {
+export class AuthRefreshTokenDto {
   @ApiProperty({
     type: 'string',
     required: true,
   })
-  @IsNotEmpty()
-  @IsEmail()
-  @IsString()
-  email: string;
+  @IsString({ message: 'Refresh token must be a string' })
+  @IsNotEmpty({ message: 'Refresh token must not be empty' })
+  refreshToken: string;
 }
