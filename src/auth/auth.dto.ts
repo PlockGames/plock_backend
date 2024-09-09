@@ -19,7 +19,7 @@ export class AuthLoginDto {
   password: string;
 }
 
-export class AuthSignupDto {
+export class AuthParitalSignupDto {
   @ApiProperty({
     type: 'string',
     required: true,
@@ -42,6 +42,44 @@ export class AuthSignupDto {
   @IsNotEmpty({ message: 'Username name is required' })
   @IsString()
   username: string;
+}
+
+export class AuthCompleteSignUpDto {
+  @ApiProperty({
+    type: 'string',
+    required: true,
+  })
+  @IsString({ message: 'Username must be a string' })
+  @IsNotEmpty({ message: 'Username must not be empty' })
+  username: string;
+  @ApiProperty({
+    type: 'string',
+    required: true,
+  })
+  @IsString({ message: 'First name must be a string' })
+  @IsNotEmpty({ message: 'First name must not be empty' })
+  firstName: string;
+  @ApiProperty({
+    type: 'string',
+    required: true,
+  })
+  @IsString({ message: 'Last name must be a string' })
+  @IsNotEmpty({ message: 'Last name must not be empty' })
+  lastName: string;
+  @ApiProperty({
+    type: 'string',
+    required: true,
+  })
+  @IsString({ message: 'Phone number must be a string' })
+  @IsNotEmpty({ message: 'Phone number must not be empty' })
+  phoneNumber: string;
+  @ApiProperty({
+    type: 'string',
+    required: true,
+  })
+  @IsString({ message: 'Birth date must be a string' })
+  @IsNotEmpty({ message: 'Birth date must not be empty' })
+  birthDate: string;
 }
 
 export class AdminDto {

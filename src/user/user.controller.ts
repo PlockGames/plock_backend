@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Req,
 } from '@nestjs/common';
 
 import { UserService } from './user.service';
@@ -15,6 +16,7 @@ import { ResponseRequest, responseRequest } from '../shared/utils/response';
 import { AuthorizedUser } from '../shared/decorators/user-type.decorator';
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -26,6 +28,7 @@ import {
   UpdateUserResponse,
   DeleteUserResponse,
 } from '../shared/swagger/responses';
+import { Request } from 'express';
 
 @ApiTags('Users')
 @Controller('user')
@@ -57,6 +60,10 @@ export class UserController {
   @Post()
   @ApiBearerAuth('JWT-auth')
   @ApiResponse(CreateUserResponse)
+  @ApiBody({
+    description: 'User me',
+    type: UserCreateDto,
+  })
   @ApiOperation({ summary: 'Create user', description: 'Create user' })
   @AuthorizedUser(UserRole.ADMIN)
   public async create(
@@ -73,6 +80,10 @@ export class UserController {
   @Put(':id')
   @ApiBearerAuth('JWT-auth')
   @ApiResponse(UpdateUserResponse)
+  @ApiBody({
+    description: 'User me',
+    type: UserUpdateDto,
+  })
   @ApiOperation({ summary: 'Update user', description: 'Update user' })
   @AuthorizedUser(UserRole.ADMIN)
   public async update(
@@ -84,6 +95,23 @@ export class UserController {
       'success',
       'User updated',
       userUpdated,
+    );
+  }
+
+  @Put('profile/me')
+  @ApiBearerAuth('JWT-auth')
+  @ApiResponse(UpdateUserResponse)
+  @ApiBody({
+    description: 'User me',
+    type: UserUpdateDto,
+  })
+  @ApiOperation({ summary: 'Update me', description: 'Update me' })
+  public async updateMe(@Req() req: Request, @Body() user: UserUpdateDto) {
+    const meUpdated = await this.userService.updateMe(req.user as User, user);
+    return responseRequest<Partial<User>>(
+      'success',
+      'Personal data updated',
+      meUpdated,
     );
   }
 

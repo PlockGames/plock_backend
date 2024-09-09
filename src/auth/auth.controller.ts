@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post, Req } from '@nestjs/common';
-import { AuthLoginDto, AuthSignupDto } from './auth.dto';
+import { AuthLoginDto, AuthParitalSignupDto } from './auth.dto';
 import { AuthService } from './auth.service';
 import { Public } from '../shared/decorators/public.decoratos';
 import { responseRequest } from '../shared/utils/response';
@@ -37,13 +37,13 @@ export class AuthController {
   @Post('signup')
   @ApiBody({
     description: 'Sign up credentials',
-    type: AuthSignupDto,
+    type: AuthParitalSignupDto,
   })
   @ApiResponse(AuthSignupResponse)
   @ApiOperation({ summary: 'Partial sign up', description: 'Partial sign up' })
   @Public()
-  async signup(@Body() authDto: AuthSignupDto) {
-    const tokens = await this.authService.signup(authDto);
+  async signup(@Body() authDto: AuthParitalSignupDto) {
+    const tokens = await this.authService.partialSignUp(authDto);
     return responseRequest('success', 'Signup success', tokens);
   }
 

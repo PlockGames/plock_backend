@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { AuthLoginDto, AuthSignupDto } from './auth.dto';
+import { AuthLoginDto, AuthParitalSignupDto } from './auth.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
@@ -16,10 +16,10 @@ export class AuthService {
     private userService: UserService,
   ) {}
 
-  async login(dto: AuthLoginDto): Promise<Tokens> {
-    const user = await this.userService.findByEmail(dto.email);
+  async login(authLoginDto: AuthLoginDto): Promise<Tokens> {
+    const user = await this.userService.findByEmail(authLoginDto.email);
     if (!user) throw new ForbiddenException('Invalid credential');
-    const isMatch = await bcrypt.compare(dto.password, user.password);
+    const isMatch = await bcrypt.compare(authLoginDto.password, user.password);
     if (!isMatch) throw new ForbiddenException('Invalid credential');
     const accessToken = await this.creationAccessToken(user);
     const refreshToken = await this.refreshToken(user);
@@ -28,28 +28,15 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  async signup(dto: AuthSignupDto): Promise<any> {
-    const hash = await bcrypt.hash(dto.password, 12);
-    try {
-      const user = await this.prisma.user.create({
-        data: {
-          email: dto.email,
-          password: hash,
-          username: dto.username,
-        },
-      });
-      const accessToken = await this.creationAccessToken(user);
-      const refreshToken = await this.refreshToken(user);
-      await this.userService.setRefreshToken(user.id, refreshToken);
-      await this.userService.updateLastLogin(user.id);
-      return { accessToken, refreshToken };
-    } catch (err) {
-      if (err instanceof PrismaClientKnownRequestError) {
-        if (err.code === 'P2002') {
-          throw new ForbiddenException('Credentials taken');
-        }
-      }
-    }
+  async partialSignUp(
+    authParitalSignupDto: AuthParitalSignupDto,
+  ): Promise<any> {
+    const user = await this.userService.partialSignUp(authParitalSignupDto);
+    const accessToken = await this.creationAccessToken(user);
+    const refreshToken = await this.refreshToken(user);
+    await this.userService.setRefreshToken(user.id, refreshToken);
+    await this.userService.updateLastLogin(user.id);
+    return { accessToken, refreshToken };
   }
 
   public async creationAccessToken(user: User): Promise<string> {
