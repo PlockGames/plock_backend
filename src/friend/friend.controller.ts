@@ -66,7 +66,7 @@ export class FriendController {
     );
   }
 
-  @Get('accepted')
+  @Get('me/accepted')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'List all accepted friends',
@@ -132,8 +132,14 @@ export class FriendController {
     type: 'string',
     required: true,
   })
-  public async deleteFriend(@Param('id') id: string, @Req() req: Request) {
-    const friend = await this.friendService.deleteFriend(req.user as User, id);
+  public async deleteFriend(
+    @Param('id') idRequest: string,
+    @Req() req: Request,
+  ) {
+    const friend = await this.friendService.deleteFriend(
+      req.user as User,
+      idRequest,
+    );
     return responseRequest('success', 'Friend deleted', friend);
   }
 }

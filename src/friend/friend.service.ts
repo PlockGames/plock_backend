@@ -53,7 +53,12 @@ export class FriendService {
   public async friendRequest(user: User, friendDto: FriendDto) {
     try {
       const userToBeFriend = await this.userService.get(friendDto.userId);
+      console.log('userToBeFriend', userToBeFriend.id);
+      console.log('user', user.id);
+
       if (user.id === userToBeFriend.id) {
+        console.log('papapapap');
+
         throw new HttpException(
           'You cannot be friend with yourself',
           HttpStatus.BAD_REQUEST,
@@ -77,7 +82,7 @@ export class FriendService {
         data: {
           userId: user.id,
           friendId: userToBeFriend.id,
-          accepted: userToBeFriend.privacy === true,
+          accepted: userToBeFriend.isPrivate === false,
         },
       });
     } catch (e) {
@@ -87,15 +92,14 @@ export class FriendService {
           HttpStatus.BAD_REQUEST,
         );
       }
-      throw new HttpException('Something went wrong', HttpStatus.BAD_REQUEST);
+      throw e;
     }
   }
 
-  public async acceptFriendRequest(user: User, friendId: string) {
+  public async acceptFriendRequest(user: User, idRequest: string) {
     const friendRequest = await this.prisma.friend.findFirst({
       where: {
-        friendId: user.id,
-        userId: friendId,
+        id: idRequest,
         accepted: false,
       },
     });
@@ -115,13 +119,10 @@ export class FriendService {
     });
   }
 
-  public async deleteFriend(user: User, friendId: string) {
+  public async deleteFriend(user: User, idRequest: string) {
     const friendship = await this.prisma.friend.findFirst({
       where: {
-        OR: [
-          { userId: user.id, friendId: friendId },
-          { userId: friendId, friendId: user.id },
-        ],
+        id: idRequest,
         accepted: true,
       },
     });

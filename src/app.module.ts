@@ -13,6 +13,7 @@ import { CommentModule } from './comment/comment.module';
 import { GameModule } from './game/game.module';
 import { TagModule } from './tag/tag.module';
 import { ReviewModule } from './review/review.module';
+import { MinioClientModule } from './minio-client/minio-client.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ReviewModule } from './review/review.module';
     GameModule,
     TagModule,
     ReviewModule,
+    MinioClientModule,
   ],
   providers: [
     {

@@ -22,7 +22,7 @@ model User {
   phoneNumber  String?   @unique
   birthDate    String?
   role         UserRole  @default(USER)
-  privacy      Boolean   @default(false)
+  isPrivate    Boolean   @default(false)
   refreshToken String?
   pofilePic    String?
   lastLogin    DateTime?
@@ -59,11 +59,15 @@ model Friend {
 }
 
 model Post {
-  id         String   @id @default(uuid())
-  content    String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  likesCount Int      @default(0)
+  id           String  @id @default(uuid())
+  content      String
+  likesCount   Int     @default(0)
+  viewsCount   Int     @default(0)
+  shareCount   Int     @default(0)
+  isRepost     Boolean @default(false)
+  duration     Int?
+  location     String?
+  parentPostId String?
 
   userId String
   user   User   @relation("UserPosts", fields: [userId], references: [id])
@@ -73,6 +77,9 @@ model Post {
   comments Comment[] @relation("PostComments")
 
   tags Taggable[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
 }
@@ -84,8 +91,6 @@ model Media {
   name              String
   size              Int
   thumbnailFileName String?
-  latitude          Float?
-  longitude         Float?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
