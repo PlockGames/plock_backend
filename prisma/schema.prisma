@@ -49,8 +49,8 @@ model Friend {
   userId   String
   friendId String
 
-  user     User    @relation("UserFriends", fields: [userId], references: [id])
-  friend   User    @relation("UserFriendsReverse", fields: [friendId], references: [id])
+  user     User    @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friend   User    @relation("UserFriendsReverse", fields: [friendId], references: [id], onDelete: Cascade)
   accepted Boolean @default(false)
 
   createdAt DateTime @default(now())
@@ -70,7 +70,7 @@ model Post {
   parentPostId String?
 
   userId String
-  user   User   @relation("UserPosts", fields: [userId], references: [id])
+  user   User   @relation("UserPosts", fields: [userId], references: [id], onDelete: Cascade)
 
   media Media[] @relation("PostMedia")
 
@@ -95,10 +95,10 @@ model Media {
   updatedAt         DateTime @updatedAt
 
   userId String
-  user   User   @relation("UserMedia", fields: [userId], references: [id])
+  user   User   @relation("UserMedia", fields: [userId], references: [id], onDelete: Cascade)
 
   postId String?
-  post   Post?   @relation("PostMedia", fields: [postId], references: [id])
+  post   Post?   @relation("PostMedia", fields: [postId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([postId])
@@ -111,10 +111,10 @@ model Comment {
   updatedAt DateTime @updatedAt
 
   userId String
-  user   User   @relation("UserComments", fields: [userId], references: [id])
+  user   User   @relation("UserComments", fields: [userId], references: [id], onDelete: Cascade)
 
   postId String
-  post   Post   @relation("PostComments", fields: [postId], references: [id])
+  post   Post   @relation("PostComments", fields: [postId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([postId])
@@ -128,7 +128,7 @@ model Game {
   updatedAt   DateTime @updatedAt
 
   creatorId String
-  creator   User   @relation("UserGames", fields: [creatorId], references: [id])
+  creator   User   @relation("UserGames", fields: [creatorId], references: [id], onDelete: Cascade)
 
   playCount Int @default(0)
 
@@ -148,13 +148,13 @@ model Tag {
 model Taggable {
   id    String @id @default(uuid())
   tagId String
-  tag   Tag    @relation(fields: [tagId], references: [id])
+  tag   Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   postId String?
   gameId String?
 
-  post Post? @relation(fields: [postId], references: [id])
-  game Game? @relation(fields: [gameId], references: [id])
+  post Post? @relation(fields: [postId], references: [id], onDelete: Cascade)
+  game Game? @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
   @@unique([tagId, postId, gameId])
   @@index([postId])
@@ -168,10 +168,10 @@ model Review {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   userId    String
-  user      User     @relation("UserReviews", fields: [userId], references: [id])
+  user      User     @relation("UserReviews", fields: [userId], references: [id], onDelete: Cascade)
 
   gameId String
-  game   Game   @relation("GameReviews", fields: [gameId], references: [id])
+  game   Game   @relation("GameReviews", fields: [gameId], references: [id], onDelete: Cascade)
 
   @@unique([userId, gameId])
   @@index([userId])

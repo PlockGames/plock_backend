@@ -59,10 +59,17 @@ export class PostService {
   public async deletePost(user: User, postId: string) {
     const post = await this.prisma.post.findUnique({
       where: { id: postId },
+      include: { media: true },
     });
     if (!post || post.userId !== user.id) {
       throw new HttpException('Post not found', HttpStatus.NOT_FOUND);
     }
+
+    await this.minioClientService.delete(post.media[0].filename);
+    if (post.media[0].thumbnailFileName) {
+      await this.minioClientService.delete(post.media[0].thumbnailFileName);
+    }
+
     return this.prisma.post.delete({
       where: { id: postId },
     });
