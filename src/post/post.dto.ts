@@ -27,6 +27,17 @@ export class CreatePostDto {
   @IsNotEmpty()
   @IsString()
   content: string;
+}
+
+export class UpdatePostDto {
+  @ApiProperty({
+    type: 'string',
+    required: false,
+    description: 'Content of the post',
+  })
+  @IsOptional()
+  @IsString()
+  content?: string;
 
   @ApiProperty({
     type: TagDto,
@@ -40,5 +51,3 @@ export class CreatePostDto {
   @Type(() => TagDto)
   tags?: TagDto[];
 }
-
-export class UpdatePostDto extends CreatePostDto {}

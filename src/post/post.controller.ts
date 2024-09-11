@@ -15,6 +15,7 @@ import {
   ApiOperation,
   ApiParam,
   ApiTags,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { PostService } from './post.service';
 import { Request } from 'express';
@@ -34,9 +35,22 @@ export class PostController {
     summary: 'Create a post',
     description: 'Create a new post',
   })
+  @ApiConsumes('multipart/form-data')
   @ApiBody({
     description: 'Post details',
-    type: CreatePostDto,
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+        content: {
+          type: 'string',
+          description: 'Content of the post',
+        },
+      },
+    },
   })
   @UseInterceptors(FileInterceptor('file'))
   public async createPost(

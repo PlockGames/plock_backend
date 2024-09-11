@@ -32,7 +32,6 @@ export class PostService {
             userId: user.id,
           },
         },
-        tags: { create: postDto.tags },
       },
     });
   }
