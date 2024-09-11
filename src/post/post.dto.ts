@@ -1,17 +1,44 @@
-import { IsNotEmpty, IsOptional, IsString, IsArray } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsArray,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+
+class TagDto {
+  @ApiProperty({
+    type: 'string',
+    description: 'ID of the tag',
+  })
+  @IsNotEmpty()
+  @IsString()
+  tagId: string;
+}
 
 export class CreatePostDto {
+  @ApiProperty({
+    type: 'string',
+    required: true,
+    description: 'Content of the post',
+  })
   @IsNotEmpty()
   @IsString()
   content: string;
 
-  @IsOptional()
-  @IsString()
-  location?: string;
-
+  @ApiProperty({
+    type: TagDto,
+    isArray: true,
+    required: false,
+    description: 'Array of tags associated with the post',
+  })
   @IsOptional()
   @IsArray()
-  tags?: { tagId: string }[];
+  @ValidateNested({ each: true })
+  @Type(() => TagDto)
+  tags?: TagDto[];
 }
 
 export class UpdatePostDto extends CreatePostDto {}

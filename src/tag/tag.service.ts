@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../shared/modules/prisma/prisma.service';
 import { Tag } from '@prisma/client';
 import { TagCreateDto, TagUpdateDto } from './tag.dto';
 

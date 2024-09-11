@@ -3,9 +3,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../shared/modules/prisma/prisma.service';
 import { User } from '@prisma/client';
-import { prismaExclude } from '../prisma/prisma-exclude';
+import { prismaExclude } from '../shared/modules/prisma/prisma-exclude';
 import { UserCreateDto, UserUpdateDto } from './user.dto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { AuthCompleteSignUpDto, AuthParitalSignupDto } from '../auth/auth.dto';

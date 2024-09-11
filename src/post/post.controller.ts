@@ -2,9 +2,8 @@ import {
   Body,
   Controller,
   Delete,
-  Get,
   Param,
-  Post as HttpPost,
+  Post,
   Put,
   Req,
   UseInterceptors,
@@ -29,7 +28,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
-  @HttpPost()
+  @Post()
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Create a post',

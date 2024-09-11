@@ -1,8 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../shared/modules/prisma/prisma.service';
 import { CreatePostDto, UpdatePostDto } from './post.dto';
 import { User } from '@prisma/client';
-import { MinioClientService } from '../minio-client/minio-client.service';
+import { MinioClientService } from '../shared/modules/minio-client/minio-client.service';
 
 @Injectable()
 export class PostService {
@@ -22,7 +22,6 @@ export class PostService {
       data: {
         content: postDto.content,
         userId: user.id,
-        location: postDto.location,
         media: {
           create: {
             filename,
@@ -50,7 +49,6 @@ export class PostService {
       where: { id: postId },
       data: {
         content: postDto.content,
-        location: postDto.location,
         tags: { deleteMany: {}, create: postDto.tags },
       },
     });
