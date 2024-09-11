@@ -6,8 +6,6 @@ import {
 } from './auth.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import { PrismaService } from '../prisma/prisma.service';
 import { UserService } from '../user/user.service';
 import { User } from '@prisma/client';
 import { Tokens } from '../shared/interfaces/auth';
@@ -15,7 +13,6 @@ import { Tokens } from '../shared/interfaces/auth';
 @Injectable()
 export class AuthService {
   constructor(
-    private prisma: PrismaService,
     private jwtService: JwtService,
     private userService: UserService,
   ) {}

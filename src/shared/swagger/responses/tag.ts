@@ -13,9 +13,6 @@ export const GetTagsResponse = {
         name: {
           type: 'string',
         },
-        description: {
-          type: 'string',
-        },
         createdAt: {
           type: 'string',
         },
@@ -36,9 +33,6 @@ export const GetTagResponse = {
         type: 'string',
       },
       name: {
-        type: 'string',
-      },
-      description: {
         type: 'string',
       },
       createdAt: {
@@ -62,9 +56,6 @@ export const CreateTagResponse = {
       name: {
         type: 'string',
       },
-      description: {
-        type: 'string',
-      },
       createdAt: {
         type: 'string',
       },
@@ -86,9 +77,6 @@ export const UpdateTagResponse = {
       name: {
         type: 'string',
       },
-      description: {
-        type: 'string',
-      },
       createdAt: {
         type: 'string',
       },
@@ -108,9 +96,6 @@ export const DeleteTagResponse = {
         type: 'string',
       },
       name: {
-        type: 'string',
-      },
-      description: {
         type: 'string',
       },
       createdAt: {
