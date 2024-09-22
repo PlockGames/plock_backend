@@ -1,4 +1,4 @@
-FROM node:22
+FROM node:20
 
 
 #Set-up Working directory
@@ -23,7 +23,7 @@ RUN groupadd -g 10001 nest && \
 USER nest:nest
 
 #Explose the port 3000
-EXPOSE 3000
+EXPOSE 80
 
 #Launch the app
 CMD ["sh", "-c", "yarn prisma migrate reset --force && yarn run start:dev"]

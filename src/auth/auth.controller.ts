@@ -1,5 +1,10 @@
 import { Body, Controller, Get, Post, Req } from '@nestjs/common';
-import { AuthLoginDto, AuthSignupDto } from './auth.dto';
+import {
+  AuthCompleteSignUpDto,
+  AuthLoginDto,
+  AuthParitalSignupDto,
+  AuthRefreshTokenDto,
+} from './auth.dto';
 import { AuthService } from './auth.service';
 import { Public } from '../shared/decorators/public.decoratos';
 import { responseRequest } from '../shared/utils/response';
@@ -14,7 +19,10 @@ import {
   AuthLoginResponse,
   AuthMeResponse,
   AuthSignupResponse,
+  UpdateUserResponse,
 } from '../shared/swagger/responses';
+import { Request } from 'express';
+import { User } from '@prisma/client';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -37,14 +45,67 @@ export class AuthController {
   @Post('signup')
   @ApiBody({
     description: 'Sign up credentials',
-    type: AuthSignupDto,
+    type: AuthParitalSignupDto,
   })
   @ApiResponse(AuthSignupResponse)
   @ApiOperation({ summary: 'Partial sign up', description: 'Partial sign up' })
   @Public()
-  async signup(@Body() authDto: AuthSignupDto) {
-    const tokens = await this.authService.signup(authDto);
+  async signup(@Body() authDto: AuthParitalSignupDto) {
+    const tokens = await this.authService.partialSignUp(authDto);
     return responseRequest('success', 'Signup success', tokens);
+  }
+
+  @ApiBody({
+    description: 'Complete sign up credentials',
+    type: AuthCompleteSignUpDto,
+  })
+  @ApiResponse(UpdateUserResponse)
+  @ApiOperation({
+    summary: 'Complete sign up',
+    description: 'Complete sign up',
+  })
+  @Post('signup/complete')
+  async completeSignUp(
+    @Req() req: Request,
+    @Body() authDto: AuthCompleteSignUpDto,
+  ) {
+    const completeSignUp = await this.authService.completeSignUp(
+      req.user as User,
+      authDto,
+    );
+    return responseRequest(
+      'success',
+      'Complete signup success',
+      completeSignUp,
+    );
+  }
+
+  @Post('refreshtoken')
+  @ApiBody({
+    description: 'Refresh token',
+    type: AuthRefreshTokenDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'The user access token',
+    schema: {
+      properties: {
+        accessToken: {
+          type: 'string',
+        },
+      },
+    },
+  })
+  @ApiOperation({
+    summary: 'Renew access token',
+    description: 'Renew access token',
+  })
+  @Public()
+  async renew(@Body() refreshToken: AuthRefreshTokenDto) {
+    const accessToken = await this.authService.renewAccessToken(
+      refreshToken.refreshToken,
+    );
+    return responseRequest('success', 'Token renewed', accessToken);
   }
 
   @Get('me')
@@ -55,6 +116,6 @@ export class AuthController {
     description: 'Get user profile',
   })
   payload(@Req() req: any): any {
-    return req.user;
+    return responseRequest('success', 'User profile', req.user);
   }
 }

@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -28,33 +22,163 @@ model User {
   phoneNumber  String?   @unique
   birthDate    String?
   role         UserRole  @default(USER)
-  privacy      Boolean   @default(false)
+  isPrivate    Boolean   @default(false)
   refreshToken String?
   pofilePic    String?
   lastLogin    DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+
+  friends Friend[] @relation("UserFriends")
+
+  Friend Friend[] @relation("UserFriendsReverse")
+
+  posts Post[] @relation("UserPosts")
+
+  media Media[] @relation("UserMedia")
+
+  comments Comment[] @relation("UserComments")
+
+  Game Game[] @relation("UserGames")
+
+  reviews Review[] @relation("UserReviews")
 }
 
-model Game {
-  id           Int       @id @default(autoincrement())
-  title        String
-  tags         String[]
-  creatorId    Int
-  creationDate DateTime
-  gameUrl      String
-  playTime     String
-  gameType     String
-  thumbnailUrl String
-  likes        Int
-  comments     Comment[] @relation("GameToComment")
+model Friend {
+  id       String @id @default(uuid())
+  userId   String
+  friendId String
+
+  user     User    @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friend   User    @relation("UserFriendsReverse", fields: [friendId], references: [id], onDelete: Cascade)
+  accepted Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, friendId])
+}
+
+model Post {
+  id           String  @id @default(uuid())
+  content      String
+  likesCount   Int     @default(0)
+  viewsCount   Int     @default(0)
+  shareCount   Int     @default(0)
+  isRepost     Boolean @default(false)
+  duration     Int?
+  parentPostId String?
+
+  userId String
+  user   User   @relation("UserPosts", fields: [userId], references: [id], onDelete: Cascade)
+
+  media Media[] @relation("PostMedia")
+
+  comments Comment[] @relation("PostComments")
+
+  tags Taggable[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Media {
+  id                String   @id @default(uuid())
+  filename          String
+  mimetype          String
+  name              String
+  size              Int
+  thumbnailFileName String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  userId String
+  user   User   @relation("UserMedia", fields: [userId], references: [id], onDelete: Cascade)
+
+  postId String?
+  post   Post?   @relation("PostMedia", fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([postId])
 }
 
 model Comment {
-  id      Int      @id @default(autoincrement())
-  userId  String
-  comment String
-  date    DateTime
-  gameId  Int
-  game    Game     @relation("GameToComment", fields: [gameId], references: [id])
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation("UserComments", fields: [userId], references: [id], onDelete: Cascade)
+
+  postId String
+  post   Post   @relation("PostComments", fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([postId])
+}
+
+model Game {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  creatorId String
+  creator   User   @relation("UserGames", fields: [creatorId], references: [id], onDelete: Cascade)
+
+  playCount Int @default(0)
+
+  tags Taggable[]
+
+  reviews Review[] @relation("GameReviews")
+
+  @@index([creatorId])
+}
+
+model Tag {
+  id          String     @id @default(uuid())
+  name        String     @unique
+  taggedItems Taggable[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Taggable {
+  id    String @id @default(uuid())
+  tagId String
+  tag   Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  postId String?
+  gameId String?
+
+  post Post? @relation(fields: [postId], references: [id], onDelete: Cascade)
+  game Game? @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tagId, postId, gameId])
+  @@index([postId])
+  @@index([gameId])
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation("UserReviews", fields: [userId], references: [id], onDelete: Cascade)
+
+  gameId String
+  game   Game   @relation("GameReviews", fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, gameId])
+  @@index([userId])
+  @@index([gameId])
 }
