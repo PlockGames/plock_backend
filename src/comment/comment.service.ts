@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Comment } from '@prisma/client';
 import { PrismaService } from '../shared/modules/prisma/prisma.service';
 import { CommentCreateDto, CommentUpdateDto } from './comment.dto';
@@ -31,13 +31,7 @@ export class CommentService {
     });
   }
 
-  async update(user, id: string, data: CommentUpdateDto): Promise<Comment> {
-    const comment = await this.get(id);
-    if (comment.userId !== user.id) {
-      throw new ForbiddenException(
-        'You are not allowed to update this comment',
-      );
-    }
+  async update(id: string, data: CommentUpdateDto): Promise<Comment> {
     return this.prisma.comment.update({
       where: { id },
       data,
@@ -45,11 +39,6 @@ export class CommentService {
   }
 
   async delete(id: string): Promise<Comment> {
-    const comment = await this.get(id);
-
-    if (!comment) {
-      throw new ForbiddenException('Comment not found');
-    }
     return this.prisma.comment.delete({
       where: { id },
     });

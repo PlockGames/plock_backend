@@ -7,6 +7,7 @@ import {
   Post,
   Put,
   Req,
+  UseInterceptors,
 } from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { Comment, User } from '@prisma/client';
@@ -25,7 +26,7 @@ import {
   DeleteCommentResponse,
 } from '../shared/swagger/responses';
 import { Request } from 'express';
-
+import { CommentOwnerInterceptor } from '../shared/interceptors/comment-owner.interceptor';
 @ApiTags('Comments')
 @Controller('comment')
 export class CommentController {
@@ -59,7 +60,8 @@ export class CommentController {
     );
   }
 
-  @Put(':idPost')
+  @Put(':id')
+  @UseInterceptors(CommentOwnerInterceptor)
   @ApiBearerAuth('JWT-auth')
   @ApiResponse(UpdateCommentResponse)
   @ApiBody({
@@ -71,15 +73,10 @@ export class CommentController {
     description: 'Update an existing comment',
   })
   public async update(
-    @Param('idPost') id: string,
+    @Param('id') id: string,
     @Body() comment: CommentUpdateDto,
-    @Req() req: Request,
   ): Promise<ResponseRequest<Partial<Comment>>> {
-    const commentUpdated = await this.commentService.update(
-      req.user as User,
-      id,
-      comment,
-    );
+    const commentUpdated = await this.commentService.update(id, comment);
     return responseRequest<Partial<Comment>>(
       'success',
       'Comment updated',
@@ -87,12 +84,13 @@ export class CommentController {
     );
   }
 
-  @Delete(':idPost')
+  @Delete(':id')
+  @UseInterceptors(CommentOwnerInterceptor)
   @ApiBearerAuth('JWT-auth')
   @ApiResponse(DeleteCommentResponse)
   @ApiOperation({ summary: 'Delete comment', description: 'Delete a comment' })
   public async delete(
-    @Param('idPost') id: string,
+    @Param('id') id: string,
   ): Promise<ResponseRequest<Partial<Comment>>> {
     const commentDeleted = await this.commentService.delete(id);
     return responseRequest<Partial<Comment>>(

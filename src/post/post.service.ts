@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../shared/modules/prisma/prisma.service';
 import { CreatePostDto, UpdatePostDto } from './post.dto';
 import { User } from '@prisma/client';
@@ -10,6 +10,12 @@ export class PostService {
     private prisma: PrismaService,
     private minioClientService: MinioClientService,
   ) {}
+
+  public async get(id: string) {
+    return this.prisma.post.findUnique({
+      where: { id },
+    });
+  }
 
   public async createPost(
     user: User,
@@ -37,13 +43,6 @@ export class PostService {
   }
 
   public async updatePost(user: User, postId: string, postDto: UpdatePostDto) {
-    const post = await this.prisma.post.findUnique({
-      where: { id: postId },
-    });
-    if (!post || post.userId !== user.id) {
-      throw new HttpException('Post not found', HttpStatus.NOT_FOUND);
-    }
-
     return this.prisma.post.update({
       where: { id: postId },
       data: {
@@ -58,15 +57,10 @@ export class PostService {
       where: { id: postId },
       include: { media: true },
     });
-    if (!post || post.userId !== user.id) {
-      throw new HttpException('Post not found', HttpStatus.NOT_FOUND);
-    }
-
     await this.minioClientService.delete(post.media[0].filename);
     if (post.media[0].thumbnailFileName) {
       await this.minioClientService.delete(post.media[0].thumbnailFileName);
     }
-
     return this.prisma.post.delete({
       where: { id: postId },
     });

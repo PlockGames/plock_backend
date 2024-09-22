@@ -23,6 +23,7 @@ import { responseRequest } from '../shared/utils/response';
 import { User } from '@prisma/client';
 import { CreatePostDto, UpdatePostDto } from './post.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { PostOwnerInterceptor } from '../shared/interceptors/post-owner.interceptor';
 
 @ApiTags('Posts')
 @Controller('post')
@@ -67,6 +68,7 @@ export class PostController {
   }
 
   @Put(':id')
+  @UseInterceptors(PostOwnerInterceptor)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Update a post',
@@ -96,6 +98,7 @@ export class PostController {
   }
 
   @Delete(':id')
+  @UseInterceptors(PostOwnerInterceptor)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Delete a post',

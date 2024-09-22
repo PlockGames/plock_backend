@@ -8,7 +8,6 @@ import { JwtAuthGuard } from './auth/guards/jwt.guards';
 import { UserTypeGuard } from './auth/guards/user-type.guard';
 import { FriendModule } from './friend/friend.module';
 import { PostModule } from './post/post.module';
-import { MediaModule } from './media/media.module';
 import { CommentModule } from './comment/comment.module';
 import { GameModule } from './game/game.module';
 import { TagModule } from './tag/tag.module';
@@ -23,7 +22,6 @@ import { MinioClientModule } from './shared/modules/minio-client/minio-client.mo
     R2Module,
     FriendModule,
     PostModule,
-    MediaModule,
     CommentModule,
     GameModule,
     TagModule,
