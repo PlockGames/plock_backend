@@ -23,8 +23,8 @@ env:
   AZURE_VM_SSH_USERNAME_DEV: ${{ secrets.AZURE_VM_SSH_USERNAME_DEV }}
 
 jobs:
-  docker-publish-front:
-    name: Docker Publish - Frontend
+  docker-publish-back:
+    name: Docker Publish - Backend
     runs-on: ubuntu-latest
 
     steps:
@@ -44,13 +44,13 @@ jobs:
           password: ${{ env.DOCKER_PASSWORD }}
 
       - name: Build Docker image
-        run: docker build -t soymustael/syntrix-front:${{ github.ref_name }} .
+        run: docker build -t soymustael/plock-back:${{ github.ref_name }} .
 
       - name: Push Docker image
-        run: docker push soymustael/syntrix-front:${{ github.ref_name }}
+        run: docker push soymustael/plock-back:${{ github.ref_name }}
 
   deploy-to-azure-vm-prod:
-    needs: docker-publish-front
+    needs: docker-publish-back
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
@@ -69,15 +69,15 @@ jobs:
           port: ${{ env.AZURE_VM_SSH_PORT_PROD }}
           script: |
             docker login -u ${{ env.DOCKER_USERNAME }} -p ${{ env.DOCKER_PASSWORD }}
-            docker pull soymustael/syntrix-front:${{ github.ref_name }}
+            docker pull soymustael/plock-back:${{ github.ref_name }}
             if [ "$(docker ps -a | grep server-${{ github.ref_name }})" ]; then
                 docker stop server-${{ github.ref_name }}
                 docker rm server-${{ github.ref_name }}
             fi
-            docker run -d --name server-${{ github.ref_name }} -p 80:80 --env-file config/env/.env soymustael/syntrix-front:${{ github.ref_name }}
+            docker run -d --name server-${{ github.ref_name }} -p 80:80 --env-file config/env/.env soymustael/plock-back:${{ github.ref_name }}
 
   deploy-to-azure-vm-dev:
-    needs: docker-publish-front
+    needs: docker-publish-back
     if: github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
     steps:
@@ -96,9 +96,9 @@ jobs:
           port: ${{ env.AZURE_VM_SSH_PORT_DEV }}
           script: |
             docker login -u ${{ env.DOCKER_USERNAME }} -p ${{ env.DOCKER_PASSWORD }}
-            docker pull soymustael/syntrix-front:${{ github.ref_name }}
+            docker pull soymustael/plock-back:${{ github.ref_name }}
             if [ "$(docker ps -a | grep server-${{ github.ref_name }})" ]; then
                 docker stop server-${{ github.ref_name }}
                 docker rm server-${{ github.ref_name }}
             fi
-            docker run -d --name server-${{ github.ref_name }} -p 80:80 --env-file config/env/.env soymustael/syntrix-front:${{ github.ref_name }}
+            docker run -d --name server-${{ github.ref_name }} -p 80:80 --env-file config/env/.env soymustael/plock-back:${{ github.ref_name }}
