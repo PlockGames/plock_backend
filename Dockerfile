@@ -26,4 +26,4 @@ USER nest:nest
 EXPOSE 80
 
 #Launch the app
-CMD ["sh", "-c", "yarn prisma migrate reset --force && yarn run start:dev"]
+CMD ["sh", "-c", "yarn prisma migrate reset --force && yarn start:prod"]

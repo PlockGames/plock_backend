@@ -29,59 +29,12 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  friends Friend[] @relation("UserFriends")
-
-  Friend Friend[] @relation("UserFriendsReverse")
-
-  posts Post[] @relation("UserPosts")
-
-  media Media[] @relation("UserMedia")
-
-  comments Comment[] @relation("UserComments")
-
-  Game Game[] @relation("UserGames")
-
-  reviews Review[] @relation("UserReviews")
+  media        Media[]   @relation("UserMedia")
+  comments     Comment[] @relation("UserComments")
+  Game         Game[]    @relation("UserGames")
+  likedGames   Like[]    
 }
 
-model Friend {
-  id       String @id @default(uuid())
-  userId   String
-  friendId String
-
-  user     User    @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
-  friend   User    @relation("UserFriendsReverse", fields: [friendId], references: [id], onDelete: Cascade)
-  accepted Boolean @default(false)
-
-  createdAt DateTime @default(now())
-
-  @@unique([userId, friendId])
-}
-
-model Post {
-  id           String  @id @default(uuid())
-  content      String
-  likesCount   Int     @default(0)
-  viewsCount   Int     @default(0)
-  shareCount   Int     @default(0)
-  isRepost     Boolean @default(false)
-  duration     Int?
-  parentPostId String?
-
-  userId String
-  user   User   @relation("UserPosts", fields: [userId], references: [id], onDelete: Cascade)
-
-  media Media[] @relation("PostMedia")
-
-  comments Comment[] @relation("PostComments")
-
-  tags Taggable[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-}
 
 model Media {
   id                String   @id @default(uuid())
@@ -96,11 +49,7 @@ model Media {
   userId String
   user   User   @relation("UserMedia", fields: [userId], references: [id], onDelete: Cascade)
 
-  postId String?
-  post   Post?   @relation("PostMedia", fields: [postId], references: [id], onDelete: Cascade)
-
   @@index([userId])
-  @@index([postId])
 }
 
 model Comment {
@@ -112,30 +61,49 @@ model Comment {
   userId String
   user   User   @relation("UserComments", fields: [userId], references: [id], onDelete: Cascade)
 
-  postId String
-  post   Post   @relation("PostComments", fields: [postId], references: [id], onDelete: Cascade)
+  gameId String
+  game   Game   @relation("GameComment", fields: [gameId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([postId])
+  @@index([gameId])
 }
 
 model Game {
-  id          String   @id @default(uuid())
-  title       String
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(uuid())
+  title        String
+  creationDate DateTime
+  gameUrl      String
+  playTime     String
+  gameType     String
+  thumbnailUrl String
+  likes        Int?     @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  creatorId String
-  creator   User   @relation("UserGames", fields: [creatorId], references: [id], onDelete: Cascade)
+  creatorId    String
+  creator      User     @relation("UserGames", fields: [creatorId], references: [id], onDelete: Cascade)
 
-  playCount Int @default(0)
-
-  tags Taggable[]
-
-  reviews Review[] @relation("GameReviews")
+  Taggable     Taggable[]
+  comments     Comment[] @relation("GameComment")
+  likedBy      Like[]    
 
   @@index([creatorId])
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  gameId    String
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  
+  @@unique([userId, gameId])
+  @@index([gameId])
+  @@index([userId])
 }
 
 model Tag {
@@ -144,7 +112,7 @@ model Tag {
   taggedItems Taggable[]
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now())
 }
 
 model Taggable {
@@ -152,33 +120,12 @@ model Taggable {
   tagId String
   tag   Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
-  postId String?
   gameId String?
-
-  post Post? @relation(fields: [postId], references: [id], onDelete: Cascade)
-  game Game? @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  game   Game? @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now())
 
-  @@unique([tagId, postId, gameId])
-  @@index([postId])
-  @@index([gameId])
-}
-
-model Review {
-  id        String   @id @default(uuid())
-  rating    Int
-  content   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  userId    String
-  user      User     @relation("UserReviews", fields: [userId], references: [id], onDelete: Cascade)
-
-  gameId String
-  game   Game   @relation("GameReviews", fields: [gameId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, gameId])
-  @@index([userId])
+  @@unique([tagId, gameId])
   @@index([gameId])
 }

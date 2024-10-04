@@ -33,6 +33,17 @@ import { GameOwnerInterceptor } from '../shared/interceptors/game-owner.intercep
 export class GameController {
   constructor(private readonly gameService: GameService) {}
 
+  @Get(':id')
+  @ApiBearerAuth('JWT-auth')
+  @ApiResponse({ status: 200 })
+  @ApiOperation({ summary: 'Get game', description: 'Get a game by id' })
+  public async getGame(
+    @Param('id') id: string,
+  ): Promise<ResponseRequest<Partial<Game>>> {
+    const game = await this.gameService.get(id);
+    return responseRequest<Partial<Game>>('success', 'Game found', game);
+  }
+
   @Post()
   @ApiBearerAuth('JWT-auth')
   @ApiResponse(CreateGameResponse)

@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
-
-import { Prisma, User } from '@prisma/client';
+import { User } from '@prisma/client';
 import { PrismaService } from '../shared/modules/prisma/prisma.service';
-import { GameCreateDto } from './game.dto';
+import { GameCreateDto, GameUpdateDto } from './game.dto';
 
 @Injectable()
 export class GameService {
@@ -17,13 +16,30 @@ export class GameService {
   async create(user: User, game: GameCreateDto) {
     return this.prisma.game.create({
       data: {
-        ...game,
+        title: game.title,
+        gameUrl: game.gameUrl,
+        playTime: game.playTime,
+        gameType: game.gameType,
+        thumbnailUrl: game.thumbnailUrl,
         creator: { connect: { id: user.id } },
+        creationDate: new Date(),
+        Taggable: {
+          create: game.tags.map((tagId) => ({
+            tag: { connect: { id: tagId } },
+          })),
+        },
+      },
+      include: {
+        Taggable: {
+          include: {
+            tag: true,
+          },
+        },
       },
     });
   }
 
-  async update(id: string, data: Prisma.GameUpdateInput) {
+  async update(id: string, data: GameUpdateDto) {
     return this.prisma.game.update({
       where: { id },
       data,
