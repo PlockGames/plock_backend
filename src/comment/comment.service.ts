@@ -7,13 +7,19 @@ import { CommentCreateDto, CommentUpdateDto } from './comment.dto';
 export class CommentService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async getAllCommentsForGame(idGame: string): Promise<Comment[]> {
+    return this.prisma.comment.findMany({
+      where: { gameId: idGame },
+    });
+  }
+
   async get(id: string): Promise<Comment> {
     return this.prisma.comment.findUnique({
       where: { id },
     });
   }
 
-  async create(user, idPost, commentDto: CommentCreateDto): Promise<Comment> {
+  async create(user, idGame, commentDto: CommentCreateDto): Promise<Comment> {
     return this.prisma.comment.create({
       data: {
         ...commentDto,
@@ -22,9 +28,9 @@ export class CommentService {
             id: user.id,
           },
         },
-        post: {
+        game: {
           connect: {
-            id: idPost,
+            id: idGame,
           },
         },
       },

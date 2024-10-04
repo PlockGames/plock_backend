@@ -149,4 +149,42 @@ export class MinioClientService {
         });
     });
   }
+
+  public async uploadJsonFile(file: Express.Multer.File) {
+    try {
+      if (file.mimetype !== 'application/json') {
+        throw new HttpException(
+          'Unsupported file type',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      const temp_filename = Date.now().toString();
+      const hashedFileName = crypto
+        .createHash('md5')
+        .update(temp_filename)
+        .digest('hex');
+      const ext = path.extname(file.originalname);
+      const metaData = {
+        'Content-Type': file.mimetype,
+      };
+      const filename = `${hashedFileName}${ext}`;
+
+      await this.client.putObject(
+        this.baseBucket,
+        filename,
+        file.buffer,
+        file.buffer.length,
+        metaData,
+      );
+
+      return { filename };
+    } catch (error) {
+      this.logger.error('Error uploading JSON file: ', error);
+      throw new HttpException(
+        'Error uploading file, please try again',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
 }

@@ -32,7 +32,23 @@ import { CommentOwnerInterceptor } from '../shared/interceptors/comment-owner.in
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
 
-  @Post(':idPost')
+  @Get('game/:idGame')
+  @ApiOperation({
+    summary: 'Get all comments of a game',
+    description: 'Retrieve all comments for a specific game',
+  })
+  public async getAllCommentsForGame(
+    @Param('idGame') idGame: string,
+  ): Promise<ResponseRequest<Comment[]>> {
+    const comments = await this.commentService.getAllCommentsForGame(idGame);
+    return responseRequest<Comment[]>(
+      'success',
+      'Comments retrieved',
+      comments,
+    );
+  }
+
+  @Post(':idGame')
   @ApiBearerAuth('JWT-auth')
   @ApiResponse(CreateCommentResponse)
   @ApiBody({
@@ -41,21 +57,21 @@ export class CommentController {
   })
   @ApiOperation({
     summary: 'Create comment',
-    description: 'Create a new comment',
+    description: 'Create a new comment on a game',
   })
   public async create(
     @Body() comment: CommentCreateDto,
-    @Param('idPost') idPost: string,
+    @Param('idGame') idGame: string,
     @Req() req: Request,
   ): Promise<ResponseRequest<Partial<Comment>>> {
     const commentCreated = await this.commentService.create(
       req.user as User,
-      idPost,
+      idGame,
       comment,
     );
     return responseRequest<Partial<Comment>>(
       'success',
-      'Comment created',
+      'Comment created on game',
       commentCreated,
     );
   }
