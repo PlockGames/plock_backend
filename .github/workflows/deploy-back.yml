@@ -13,14 +13,10 @@ env:
   NODE_VERSION: '20.x'
   DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-  AZURE_VM_SSH_HOST_PROD: ${{ secrets.AZURE_VM_SSH_HOST_PROD }}
-  AZURE_VM_SSH_PASSWORD_PROD: ${{ secrets.AZURE_VM_SSH_PASSWORD_PROD }}
-  AZURE_VM_SSH_PORT_PROD: ${{ secrets.AZURE_VM_SSH_PORT_PROD }}
-  AZURE_VM_SSH_USERNAME_PROD: ${{ secrets.AZURE_VM_SSH_USERNAME_PROD }}
-  AZURE_VM_SSH_HOST_DEV: ${{ secrets.AZURE_VM_SSH_HOST_DEV }}
-  AZURE_VM_SSH_PASSWORD_DEV: ${{ secrets.AZURE_VM_SSH_PASSWORD_DEV }}
-  AZURE_VM_SSH_PORT_DEV: ${{ secrets.AZURE_VM_SSH_PORT_DEV }}
-  AZURE_VM_SSH_USERNAME_DEV: ${{ secrets.AZURE_VM_SSH_USERNAME_DEV }}
+  VM_SSH_HOST: ${{ secrets.VM_SSH_HOST }}
+  VM_SSH_USERNAME: ${{ secrets.VM_SSH_USERNAME }}
+  VM_SSH_PASSWORD: ${{ secrets.VM_SSH_PASSWORD }}
+  VM_SSH_PORT: ${{ secrets.VM_SSH_PORT }}
 
 jobs:
   docker-publish-back:
@@ -49,9 +45,8 @@ jobs:
       - name: Push Docker image
         run: docker push soymustael/plock-back:${{ github.ref_name }}
 
-  deploy-to-azure-vm-prod:
+  deploy-to-droplet:
     needs: docker-publish-back
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -63,10 +58,10 @@ jobs:
       - name: SSH into Droplet, pull image, and run container
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ env.AZURE_VM_SSH_HOST_PROD }}
-          username: ${{ env.AZURE_VM_SSH_USERNAME_PROD }}
-          password: ${{ env.AZURE_VM_SSH_PASSWORD_PROD }}
-          port: ${{ env.AZURE_VM_SSH_PORT_PROD }}
+          host: ${{ env.VM_SSH_HOST }}
+          username: ${{ env.VM_SSH_USERNAME }}
+          password: ${{ env.VM_SSH_PASSWORD }}
+          port: ${{ env.VM_SSH_PORT }}
           script: |
             docker login -u ${{ env.DOCKER_USERNAME }} -p ${{ env.DOCKER_PASSWORD }}
             docker pull soymustael/plock-back:${{ github.ref_name }}
@@ -74,31 +69,11 @@ jobs:
                 docker stop server-${{ github.ref_name }}
                 docker rm server-${{ github.ref_name }}
             fi
-            docker run -d --name server-${{ github.ref_name }} -p 80:80 --env-file config/env/.env soymustael/plock-back:${{ github.ref_name }}
-
-  deploy-to-azure-vm-dev:
-    needs: docker-publish-back
-    if: github.ref == 'refs/heads/develop'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Install SSH client
-        run: sudo apt-get install -y openssh-client
-
-      - name: SSH into Droplet, pull image, and run container
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ env.AZURE_VM_SSH_HOST_DEV }}
-          username: ${{ env.AZURE_VM_SSH_USERNAME_DEV }}
-          password: ${{ env.AZURE_VM_SSH_PASSWORD_DEV }}
-          port: ${{ env.AZURE_VM_SSH_PORT_DEV }}
-          script: |
-            docker login -u ${{ env.DOCKER_USERNAME }} -p ${{ env.DOCKER_PASSWORD }}
-            docker pull soymustael/plock-back:${{ github.ref_name }}
-            if [ "$(docker ps -a | grep server-${{ github.ref_name }})" ]; then
-                docker stop server-${{ github.ref_name }}
-                docker rm server-${{ github.ref_name }}
+            if [ "${{ github.ref_name }}" = "main" ]; then
+            docker run -d --name server-${{ github.ref_name }} -p 3000:3000 --env-file /config/env/.env.${{ github.ref_name }} soymustael/plock-back:${{ github.ref_name }}
+            elif [ "${{ github.ref_name }}" = "develop" ]; then
+            docker run -d --name server-${{ github.ref_name }} -p 4000:4000 --env-file /config/env/.env.${{ github.ref_name }} soymustael/plock-back:${{ github.ref_name }}
+            else
+            echo "Unsupported branch: ${{ github.ref_name }}"
+            exit 1
             fi
-            docker run -d --name server-${{ github.ref_name }} -p 80:80 --env-file config/env/.env soymustael/plock-back:${{ github.ref_name }}
