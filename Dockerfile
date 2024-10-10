@@ -24,4 +24,4 @@ USER nest:nest
 EXPOSE 80
 
 #Launch the app
-CMD ["sh", "-c", "npx prisma migrate reset --force && yarn start:prod"]
+CMD ["sh", "-c", "npx prisma migrate deploy && yarn start:prod"]
