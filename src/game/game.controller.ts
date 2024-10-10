@@ -45,7 +45,7 @@ export class GameController {
   public async getGame(
     @Param('id') id: string,
   ): Promise<ResponseRequest<Partial<Game>>> {
-    const game = await this.gameService.get(id);
+    const game = await this.gameService.getGame(id);
     return responseRequest<Partial<Game>>('success', 'Game found', game);
   }
 
@@ -61,7 +61,10 @@ export class GameController {
     @Body() game: GameCreateDto,
     @Req() req: Request,
   ): Promise<ResponseRequest<Partial<Game>>> {
-    const gameCreated = await this.gameService.create(req.user as User, game);
+    const gameCreated = await this.gameService.createGame(
+      req.user as User,
+      game,
+    );
     return responseRequest<Partial<Game>>(
       'success',
       'Game created',
@@ -85,7 +88,7 @@ export class GameController {
     @Param('id') id: string,
     @Body() game: GameUpdateDto,
   ): Promise<ResponseRequest<Partial<Game>>> {
-    const gameUpdated = await this.gameService.update(id, game);
+    const gameUpdated = await this.gameService.updateGame(id, game);
     return responseRequest<Partial<Game>>(
       'success',
       'Game updated',
@@ -101,7 +104,7 @@ export class GameController {
   public async delete(
     @Param('id') id: string,
   ): Promise<ResponseRequest<Partial<Game>>> {
-    const gameDeleted = await this.gameService.delete(id);
+    const gameDeleted = await this.gameService.deleteGame(id);
     return responseRequest<Partial<Game>>(
       'success',
       'Game deleted',

@@ -3,6 +3,7 @@ import {
   IsArray,
   IsInt,
   IsNotEmpty,
+  IsObject,
   IsOptional,
   IsString,
 } from 'class-validator';
@@ -25,15 +26,6 @@ export class GameCreateDto {
   })
   @IsArray()
   tags: string[];
-
-  @ApiProperty({
-    type: 'string',
-    required: true,
-    description: 'URL of the game',
-  })
-  @IsNotEmpty({ message: 'The game URL is required' })
-  @IsString()
-  gameUrl: string;
 
   @ApiProperty({
     type: 'string',
@@ -61,6 +53,15 @@ export class GameCreateDto {
   @IsNotEmpty({ message: 'Thumbnail URL is required' })
   @IsString()
   thumbnailUrl: string;
+
+  @ApiProperty({
+    type: 'string',
+    required: true,
+    description: 'Content game JSON',
+  })
+  @IsNotEmpty({ message: 'Content game JSON is required' })
+  @IsObject()
+  contentGame: object;
 }
 
 export class GameUpdateDto {
@@ -79,16 +80,9 @@ export class GameUpdateDto {
     description: 'Array of tag IDs',
     items: { type: 'string' },
   })
+  @IsOptional()
   @IsArray()
   tags: string[];
-  @ApiProperty({
-    type: 'string',
-    required: false,
-    description: 'URL of the game',
-  })
-  @IsOptional()
-  @IsString()
-  gameUrl?: string;
 
   @ApiProperty({
     type: 'string',
@@ -125,4 +119,13 @@ export class GameUpdateDto {
   @IsOptional()
   @IsInt()
   likes?: number;
+
+  @ApiProperty({
+    type: 'string',
+    required: false,
+    description: 'Content game JSON',
+  })
+  @IsOptional()
+  @IsObject()
+  contentGame?: object;
 }

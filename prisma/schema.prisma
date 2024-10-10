@@ -29,12 +29,11 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  media        Media[]   @relation("UserMedia")
-  comments     Comment[] @relation("UserComments")
-  Game         Game[]    @relation("UserGames")
-  likedGames   Like[]    
+  media      Media[]   @relation("UserMedia")
+  comments   Comment[] @relation("UserComments")
+  Game       Game[]    @relation("UserGames")
+  likedGames Like[]
 }
-
 
 model Media {
   id                String   @id @default(uuid())
@@ -69,38 +68,64 @@ model Comment {
 }
 
 model Game {
-  id           String   @id @default(uuid())
-  title        String
-  creationDate DateTime
-  gameUrl      String
-  playTime     String
-  gameType     String
-  thumbnailUrl String
-  likes        Int?     @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              String   @id @default(uuid())
+  title           String
+  creationDate    DateTime
+  gameUrl         String
+  winConditionUrl String?
+  gameObjectsUrl  String?
+  playTime        String
+  gameType        String
+  thumbnailUrl    String
+  likes           Int?     @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  creatorId    String
-  creator      User     @relation("UserGames", fields: [creatorId], references: [id], onDelete: Cascade)
+  creatorId String
+  creator   User   @relation("UserGames", fields: [creatorId], references: [id], onDelete: Cascade)
 
-  Taggable     Taggable[]
-  comments     Comment[] @relation("GameComment")
-  likedBy      Like[]    
+  Taggable Taggable[]
+  comments Comment[]  @relation("GameComment")
+  likedBy  Like[]
+
+  objects       ObjectsGame[]      @relation("GameObjects")
+  winConditions WinConditionGame[] @relation("GameWinCondition")
 
   @@index([creatorId])
 }
 
-model Like {
+model ObjectsGame {
   id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  url       String
   gameId    String
-  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  game      Game     @relation("GameObjects", fields: [gameId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([gameId])
+}
+
+model WinConditionGame {
+  id        String   @id @default(uuid())
+  url       String
+  gameId    String
+  game      Game     @relation("GameWinCondition", fields: [gameId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([gameId])
+}
+
+model Like {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  gameId String
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
-  
   @@unique([userId, gameId])
   @@index([gameId])
   @@index([userId])
@@ -121,7 +146,7 @@ model Taggable {
   tag   Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   gameId String?
-  game   Game? @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  game   Game?   @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())

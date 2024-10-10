@@ -2,27 +2,59 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from '../shared/modules/prisma/prisma.service';
 import { GameCreateDto, GameUpdateDto } from './game.dto';
-import { v4 as uuidv4 } from 'uuid';
 import { R2Service } from '../shared/modules/r2/r2.service';
+import { MinioClientService } from '../shared/modules/minio-client/minio-client.service';
+import * as fs from 'fs';
+import { tmpdir } from 'os';
+import { Readable } from 'stream';
+import * as path from 'path';
 
 @Injectable()
 export class GameService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly r2Service: R2Service,
+    private readonly minioClientService: MinioClientService,
   ) {}
 
-  public async get(id: string) {
+  public async getGame(id: string) {
     return this.prisma.game.findUnique({
       where: { id },
+      include: {
+        Taggable: {
+          include: {
+            tag: true,
+          },
+        },
+        creator: true,
+      },
     });
   }
 
-  public async create(user: User, game: GameCreateDto) {
+  public async createGame(user: User, game: GameCreateDto) {
+    const tempFilePath = path.join(tmpdir(), `${Date.now()}-contentGame.json`);
+    fs.writeFileSync(tempFilePath, JSON.stringify(game.contentGame));
+
+    const fileBuffer = fs.readFileSync(tempFilePath);
+
+    const uploadGame = await this.minioClientService.uploadJsonFile(
+      {
+        originalname: 'contentGame.json',
+        mimetype: 'application/json',
+        buffer: fileBuffer,
+        size: fileBuffer.length,
+        stream: Readable.from(fileBuffer),
+      } as Express.Multer.File,
+      game.title,
+      'game',
+    );
+
+    fs.unlinkSync(tempFilePath);
+
+    delete game.contentGame;
     return this.prisma.game.create({
       data: {
         title: game.title,
-        gameUrl: game.gameUrl,
+        gameUrl: `${process.env.MINIO_URL}/${process.env.MINIO_BUCKET}/${uploadGame.filename}`,
         playTime: game.playTime,
         gameType: game.gameType,
         thumbnailUrl: game.thumbnailUrl,
@@ -43,114 +75,269 @@ export class GameService {
       },
     });
   }
+  public async updateGame(id: string, data: GameUpdateDto) {
+    const game = await this.getGame(id);
+    if (!game) {
+      throw new HttpException('Game not found', HttpStatus.NOT_FOUND);
+    }
 
-  public async update(id: string, data: GameUpdateDto) {
+    let contentGameUrl = game.gameUrl;
+
+    if (data.contentGame) {
+      const existingFileName = `games/${game.title}/${contentGameUrl.split('/').pop()}`;
+
+      const tempFilePath = path.join(
+        tmpdir(),
+        `${Date.now()}-contentGame.json`,
+      );
+      fs.writeFileSync(tempFilePath, JSON.stringify(data.contentGame));
+
+      const fileBuffer = fs.readFileSync(tempFilePath);
+
+      const uploadGame = await this.minioClientService.updateJsonFile(
+        {
+          originalname: existingFileName || 'contentGame.json',
+          mimetype: 'application/json',
+          buffer: fileBuffer,
+          size: fileBuffer.length,
+          stream: Readable.from(fileBuffer),
+        } as Express.Multer.File,
+        existingFileName,
+        data.title || game.title,
+        'game',
+      );
+
+      fs.unlinkSync(tempFilePath);
+
+      contentGameUrl = `${process.env.MINIO_URL}/${process.env.MINIO_BUCKET}/${uploadGame.filename}`;
+    }
+
+    delete data.contentGame;
+
     return this.prisma.game.update({
       where: { id },
-      data,
+      data: {
+        ...data,
+        gameUrl: contentGameUrl,
+      },
     });
   }
 
-  public async delete(id: string) {
+  public async deleteGame(id: string) {
+    const game = await this.getGame(id);
+    if (!game) {
+      throw new HttpException('Game not found', HttpStatus.NOT_FOUND);
+    }
+    const existingFileName = `games/${game.title}`;
+    await this.minioClientService.delete(existingFileName);
     return this.prisma.game.delete({
       where: { id },
     });
   }
 
-  // toCheck
-  public async createWinCondition(gameId: string, createWinConditionDto: any) {
-    const key = `game-${gameId}/winConditions/${uuidv4()}`;
-    return this.r2Service.uploadFile(
-      'plock-games',
-      key,
-      JSON.stringify(createWinConditionDto),
-    );
-  }
-
   public async getAllWinConditionsByGame(gameId: string) {
-    const prefix = `game-${gameId}/winConditions/`;
-    const keys = await this.r2Service.listFiles('plock-games', prefix);
-    const winConditions = await Promise.all(
-      keys.map(async (key) => {
-        const file = await this.r2Service.getFile('plock-games', key);
-        const body = JSON.parse(file.Body.toString());
-        return { key, ...body };
-      }),
-    );
-    return winConditions;
+    return this.prisma.winConditionGame.findMany({
+      where: { gameId },
+    });
   }
+  public async createWinCondition(gameId: string, createWinConditionDto: any) {
+    const game = await this.prisma.game.findUnique({
+      where: { id: gameId },
+    });
 
-  public async deleteWinCondition(gameId: string, id: string) {
-    const key = `game-${gameId}/winConditions/${id}`;
-    return this.r2Service.deleteFile('plock-games', key);
+    if (!game) {
+      throw new HttpException('Game not found', HttpStatus.NOT_FOUND);
+    }
+
+    const tempFilePath = path.join(tmpdir(), `${Date.now()}-winCondition.json`);
+    fs.writeFileSync(tempFilePath, JSON.stringify(createWinConditionDto));
+
+    const fileBuffer = fs.readFileSync(tempFilePath);
+
+    const uploadWinCondition = await this.minioClientService.uploadJsonFile(
+      {
+        originalname: 'winCondition.json',
+        mimetype: 'application/json',
+        buffer: fileBuffer,
+        size: fileBuffer.length,
+        stream: Readable.from(fileBuffer),
+      } as Express.Multer.File,
+      game.title,
+      'winCondition',
+    );
+
+    fs.unlinkSync(tempFilePath);
+
+    return this.prisma.winConditionGame.create({
+      data: {
+        url: `${process.env.MINIO_URL}/${process.env.MINIO_BUCKET}/${uploadWinCondition.filename}`,
+        game: { connect: { id: gameId } },
+      },
+    });
   }
 
   public async updateWinCondition(gameId: string, id: string, body: any) {
-    const key = `game-${gameId}/winConditions/${id}`;
-    return this.r2Service.updateFile('plock-games', key, JSON.stringify(body));
-  }
+    const winCondition = await this.prisma.winConditionGame.findUnique({
+      where: { id },
+      include: {
+        game: true,
+      },
+    });
 
-  public async createGameObject(gameId: string, createGameObjectDto: any) {
-    try {
-      const key = `game-${gameId}/gameObjects/${uuidv4()}`;
-      return await this.r2Service.uploadFile(
-        'plock-games',
-        key,
-        JSON.stringify(createGameObjectDto),
-      );
-    } catch (error) {
-      throw new HttpException(
-        `Failed to create game object: ${error.message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+    if (!winCondition) {
+      throw new HttpException('Win condition not found', HttpStatus.NOT_FOUND);
     }
+
+    const existingFileName = `games/${winCondition.game.title}/${winCondition.url.split('/').pop()}`;
+
+    const tempFilePath = path.join(tmpdir(), `${Date.now()}-winCondition.json`);
+    fs.writeFileSync(tempFilePath, JSON.stringify(body));
+
+    const fileBuffer = fs.readFileSync(tempFilePath);
+
+    const uploadWinCondition = await this.minioClientService.updateJsonFile(
+      {
+        originalname: existingFileName || 'winCondition.json',
+        mimetype: 'application/json',
+        buffer: fileBuffer,
+        size: fileBuffer.length,
+        stream: Readable.from(fileBuffer),
+      } as Express.Multer.File,
+      existingFileName,
+      winCondition.game.title,
+      'winCondition',
+    );
+
+    fs.unlinkSync(tempFilePath);
+
+    return this.prisma.winConditionGame.update({
+      where: { id },
+      data: {
+        url: `${process.env.MINIO_URL}/${process.env.MINIO_BUCKET}/${uploadWinCondition.filename}`,
+      },
+    });
+  }
+  public async deleteWinCondition(gameId: string, id: string) {
+    const winCondition = await this.prisma.winConditionGame.findUnique({
+      where: { id },
+      include: {
+        game: true,
+      },
+    });
+
+    if (!winCondition) {
+      throw new HttpException('Win condition not found', HttpStatus.NOT_FOUND);
+    }
+
+    const existingFileName = `games/${winCondition.game.title}/${winCondition.url.split('/').pop()}`;
+    await this.minioClientService.delete(existingFileName);
+
+    return this.prisma.winConditionGame.delete({
+      where: { id },
+    });
   }
 
   public async getAllGameObjectsByGame(gameId: string) {
-    try {
-      const prefix = `game-${gameId}/gameObjects/`;
-      const keys = await this.r2Service.listFiles('plock-games', prefix);
-      const gameObjects = await Promise.all(
-        keys.map(async (key) => {
-          const file = await this.r2Service.getFile('plock-games', key);
-          const body = JSON.parse(file.Body.toString());
-          return { key, ...body };
-        }),
-      );
-      return gameObjects;
-    } catch (error) {
-      throw new HttpException(
-        `Failed to retrieve game objects: ${error.message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    return this.prisma.objectsGame.findMany({
+      where: { gameId },
+    });
   }
 
-  public async deleteGameObject(gameId: string, id: string) {
-    try {
-      const key = `game-${gameId}/gameObjects/${id}`;
-      return await this.r2Service.deleteFile('plock-games', key);
-    } catch (error) {
-      throw new HttpException(
-        `Failed to delete game object: ${error.message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+  public async createGameObject(gameId: string, createGameObjectDto: any) {
+    const game = await this.prisma.game.findUnique({
+      where: { id: gameId },
+    });
+
+    if (!game) {
+      throw new HttpException('Game not found', HttpStatus.NOT_FOUND);
     }
+
+    const tempFilePath = path.join(tmpdir(), `${Date.now()}-gameObject.json`);
+    fs.writeFileSync(tempFilePath, JSON.stringify(createGameObjectDto));
+
+    const fileBuffer = fs.readFileSync(tempFilePath);
+
+    const uploadGameObject = await this.minioClientService.uploadJsonFile(
+      {
+        originalname: 'gameObject.json',
+        mimetype: 'application/json',
+        buffer: fileBuffer,
+        size: fileBuffer.length,
+        stream: Readable.from(fileBuffer),
+      } as Express.Multer.File,
+      game.title,
+      'gameObject',
+    );
+
+    fs.unlinkSync(tempFilePath);
+
+    return this.prisma.objectsGame.create({
+      data: {
+        url: `${process.env.MINIO_URL}/${process.env.MINIO_BUCKET}/${uploadGameObject.filename}`,
+        game: { connect: { id: gameId } },
+      },
+    });
   }
 
   public async updateGameObject(gameId: string, id: string, body: any) {
-    try {
-      const key = `game-${gameId}/gameObjects/${id}`;
-      return await this.r2Service.updateFile(
-        'plock-games',
-        key,
-        JSON.stringify(body),
-      );
-    } catch (error) {
-      throw new HttpException(
-        `Failed to update game object: ${error.message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+    const gameObject = await this.prisma.objectsGame.findUnique({
+      where: { id },
+      include: {
+        game: true,
+      },
+    });
+
+    if (!gameObject) {
+      throw new HttpException('Game object not found', HttpStatus.NOT_FOUND);
     }
+
+    const existingFileName = `games/${gameObject.game.title}/${gameObject.url.split('/').pop()}`;
+
+    const tempFilePath = path.join(tmpdir(), `${Date.now()}-gameObject.json`);
+    fs.writeFileSync(tempFilePath, JSON.stringify(body));
+
+    const fileBuffer = fs.readFileSync(tempFilePath);
+
+    const uploadGameObject = await this.minioClientService.updateJsonFile(
+      {
+        originalname: existingFileName || 'gameObject.json',
+        mimetype: 'application/json',
+        buffer: fileBuffer,
+        size: fileBuffer.length,
+        stream: Readable.from(fileBuffer),
+      } as Express.Multer.File,
+      existingFileName,
+      gameObject.game.title,
+      'gameObject',
+    );
+
+    fs.unlinkSync(tempFilePath);
+
+    return this.prisma.objectsGame.update({
+      where: { id },
+      data: {
+        url: `${process.env.MINIO_URL}/${process.env.MINIO_BUCKET}/${uploadGameObject.filename}`,
+      },
+    });
+  }
+
+  public async deleteGameObject(gameId: string, id: string) {
+    const gameObject = await this.prisma.objectsGame.findUnique({
+      where: { id },
+      include: {
+        game: true,
+      },
+    });
+
+    if (!gameObject) {
+      throw new HttpException('Game object not found', HttpStatus.NOT_FOUND);
+    }
+
+    const existingFileName = `games/${gameObject.game.title}/${gameObject.url.split('/').pop()}`;
+    await this.minioClientService.delete(existingFileName);
+
+    return this.prisma.objectsGame.delete({
+      where: { id },
+    });
   }
 }

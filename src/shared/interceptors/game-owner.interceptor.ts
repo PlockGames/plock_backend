@@ -22,7 +22,7 @@ export class GameOwnerInterceptor implements NestInterceptor {
     const user: User = req.user;
 
     const gameId = req.params.id;
-    const game = await this.gameService.get(gameId);
+    const game = await this.gameService.getGame(gameId);
 
     if (!game || game.creatorId !== user.id) {
       throw new ForbiddenException('You are not the creator of this game');

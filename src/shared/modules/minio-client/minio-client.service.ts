@@ -20,7 +20,10 @@ export class MinioClientService {
     this.logger = new Logger('MinioStorageService');
   }
 
-  public async upload(file: Express.Multer.File, createThumbnail: boolean) {
+  public async uploadMedia(
+    file: Express.Multer.File,
+    createThumbnail: boolean,
+  ) {
     try {
       const isImage =
         file.mimetype.includes('jpeg') || file.mimetype.includes('png');
@@ -57,10 +60,10 @@ export class MinioClientService {
       );
 
       let thumbnailFileName: string | undefined;
-      // todo fix creation thumbnail
+
       if (createThumbnail) {
         if (isImage) {
-          thumbnailFileName = `thumbnails-${filename}`;
+          thumbnailFileName = `images/thumbnails-${filename}`;
           const thumbnailBuffer = await this.createImageThumbnail(file.buffer);
           await this.client.putObject(
             this.baseBucket,
@@ -70,7 +73,7 @@ export class MinioClientService {
             metaData,
           );
         } else if (isVideo) {
-          thumbnailFileName = `thumbnails-${filename}.jpg`;
+          thumbnailFileName = `videos/thumbnails-${filename}.jpg`;
           const thumbnailBuffer = await this.createVideoThumbnail(
             file.buffer,
             thumbnailFileName,
@@ -150,7 +153,11 @@ export class MinioClientService {
     });
   }
 
-  public async uploadJsonFile(file: Express.Multer.File) {
+  public async uploadJsonFile(
+    file: Express.Multer.File,
+    gameTitle: string,
+    type: string,
+  ) {
     try {
       if (file.mimetype !== 'application/json') {
         throw new HttpException(
@@ -168,7 +175,7 @@ export class MinioClientService {
       const metaData = {
         'Content-Type': file.mimetype,
       };
-      const filename = `${hashedFileName}${ext}`;
+      const filename = `games/${gameTitle}/${type}-${hashedFileName}${ext}`;
 
       await this.client.putObject(
         this.baseBucket,
@@ -183,6 +190,46 @@ export class MinioClientService {
       this.logger.error('Error uploading JSON file: ', error);
       throw new HttpException(
         'Error uploading file, please try again',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  public async updateJsonFile(
+    file: Express.Multer.File,
+    existingFileName: string,
+    gameTitle: string,
+    type: string,
+  ) {
+    try {
+      if (existingFileName) {
+        await this.delete(existingFileName);
+      }
+
+      const temp_filename = Date.now().toString();
+      const hashedFileName = crypto
+        .createHash('md5')
+        .update(temp_filename)
+        .digest('hex');
+      const ext = path.extname(file.originalname);
+      const metaData = {
+        'Content-Type': file.mimetype,
+      };
+      const filename = `games/${gameTitle}/${type}-${hashedFileName}${ext}`;
+
+      await this.client.putObject(
+        this.baseBucket,
+        filename,
+        file.buffer,
+        file.buffer.length,
+        metaData,
+      );
+
+      return { filename };
+    } catch (error) {
+      this.logger.error('Error updating JSON file: ', error);
+      throw new HttpException(
+        'Error updating file, please try again',
         HttpStatus.BAD_REQUEST,
       );
     }
