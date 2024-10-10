@@ -7,7 +7,7 @@ WORKDIR /usr/src/app
 COPY . .
 
 #Install of all dependencies
-RUN yarn install --frozen-lockfile
+RUN yarn install
 
 #Launch test
 RUN yarn build
