@@ -70,9 +70,9 @@ jobs:
                 docker rm server-${{ github.ref_name }}
             fi
             if [ "${{ github.ref_name }}" = "main" ]; then
-            docker run -d --name server-${{ github.ref_name }} -p 3000:3000 --env-file /config/env/.env.${{ github.ref_name }} soymustael/plock-back:${{ github.ref_name }}
+            docker run -d --name server-${{ github.ref_name }} -p 3000:3000 --env-file /root/config/env/.env.${{ github.ref_name }} soymustael/plock-back:${{ github.ref_name }}
             elif [ "${{ github.ref_name }}" = "develop" ]; then
-            docker run -d --name server-${{ github.ref_name }} -p 4000:4000 --env-file /config/env/.env.${{ github.ref_name }} soymustael/plock-back:${{ github.ref_name }}
+            docker run -d --name server-${{ github.ref_name }} -p 4000:4000 --env-file /root/config/env/.env.${{ github.ref_name }} soymustael/plock-back:${{ github.ref_name }}
             else
             echo "Unsupported branch: ${{ github.ref_name }}"
             exit 1
