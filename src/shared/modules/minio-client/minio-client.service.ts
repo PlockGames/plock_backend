@@ -26,13 +26,21 @@ export class MinioClientService {
   ) {
     try {
       const isImage =
-        file.mimetype.includes('jpeg') || file.mimetype.includes('png');
+        file.mimetype.includes('jpeg') ||
+        file.mimetype.includes('png') ||
+        file.mimetype.includes('gif') ||
+        file.mimetype.includes('webp') ||
+        file.mimetype.includes('svg');
       const isVideo =
         file.mimetype.includes('mp4') ||
         file.mimetype.includes('mov') ||
         file.mimetype.includes('avi');
+      const isAudio =
+        file.mimetype.includes('audio') ||
+        file.mimetype.includes('mp3') ||
+        file.mimetype.includes('wav');
 
-      if (!isImage && !isVideo) {
+      if (!isImage && !isVideo && !isAudio) {
         throw new HttpException(
           'Unsupported file type',
           HttpStatus.BAD_REQUEST,
@@ -231,6 +239,86 @@ export class MinioClientService {
       throw new HttpException(
         'Error updating file, please try again',
         HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  public async deleteFolder(folderName: string) {
+    try {
+      const objectsStream = this.client.listObjectsV2(
+        this.baseBucket,
+        folderName,
+        true,
+      );
+
+      const objectsToDelete: string[] = [];
+
+      objectsStream.on('data', (obj) => {
+        objectsToDelete.push(obj.name);
+      });
+
+      objectsStream.on('error', (err) => {
+        this.logger.error('Error listing folder objects: ', err);
+        throw new HttpException(
+          'Error listing folder objects',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      });
+
+      objectsStream.on('end', async () => {
+        for (const objectName of objectsToDelete) {
+          await this.delete(objectName);
+        }
+      });
+    } catch (error) {
+      this.logger.error('Error deleting folder: ', error);
+      throw new HttpException(
+        'Error deleting folder, please try again',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  public async folderExists(folderName: string): Promise<boolean> {
+    try {
+      // Intentar listar objetos con el prefijo del nombre del folder
+      const objectsStream = this.client.listObjectsV2(
+        this.baseBucket,
+        folderName,
+        true,
+      );
+
+      return new Promise((resolve, reject) => {
+        let exists = false;
+
+        objectsStream.on('data', (obj) => {
+          // Si encontramos al menos un objeto, significa que el folder existe
+          if (obj.name.startsWith(folderName)) {
+            exists = true;
+            resolve(true); // Si encontramos algo, resolvemos con true
+          }
+        });
+
+        objectsStream.on('end', () => {
+          // Si no se encontró nada, resolvemos con false
+          resolve(exists);
+        });
+
+        objectsStream.on('error', (err) => {
+          this.logger.error('Error checking folder existence: ', err);
+          reject(
+            new HttpException(
+              'Error checking folder existence',
+              HttpStatus.INTERNAL_SERVER_ERROR,
+            ),
+          );
+        });
+      });
+    } catch (error) {
+      this.logger.error('Error checking folder existence: ', error);
+      throw new HttpException(
+        'Error checking folder existence, please try again',
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }

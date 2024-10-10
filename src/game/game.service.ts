@@ -2,7 +2,6 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from '../shared/modules/prisma/prisma.service';
 import { GameCreateDto, GameUpdateDto } from './game.dto';
-import { R2Service } from '../shared/modules/r2/r2.service';
 import { MinioClientService } from '../shared/modules/minio-client/minio-client.service';
 import * as fs from 'fs';
 import { tmpdir } from 'os';
@@ -26,11 +25,20 @@ export class GameService {
           },
         },
         creator: true,
+        objects: true,
+        winConditions: true,
       },
     });
   }
 
   public async createGame(user: User, game: GameCreateDto) {
+    const folderExists = await this.minioClientService.folderExists(
+      `games/${game.title}`,
+    );
+    if (folderExists) {
+      throw new HttpException('Game already exists', HttpStatus.BAD_REQUEST);
+    }
+
     const tempFilePath = path.join(tmpdir(), `${Date.now()}-contentGame.json`);
     fs.writeFileSync(tempFilePath, JSON.stringify(game.contentGame));
 
@@ -128,8 +136,7 @@ export class GameService {
     if (!game) {
       throw new HttpException('Game not found', HttpStatus.NOT_FOUND);
     }
-    const existingFileName = `games/${game.title}`;
-    await this.minioClientService.delete(existingFileName);
+    await this.minioClientService.deleteFolder(`games/${game.title}`);
     return this.prisma.game.delete({
       where: { id },
     });
