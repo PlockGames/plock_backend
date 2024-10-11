@@ -6,42 +6,44 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Req,
   UseInterceptors,
 } from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { Comment, User } from '@prisma/client';
-import { CommentCreateDto, CommentUpdateDto } from './comment.dto';
+import { CommentCreateDto, CommentDto, CommentUpdateDto } from './comment.dto';
 import { ResponseRequest, responseRequest } from '../shared/utils/response';
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
-import {
-  CreateCommentResponse,
-  UpdateCommentResponse,
-  DeleteCommentResponse,
-} from '../shared/swagger/responses';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+
 import { Request } from 'express';
 import { CommentOwnerInterceptor } from '../shared/interceptors/comment-owner.interceptor';
+import { PaginatedOutputDto } from '../shared/interfaces/pagination';
+import { ApiPaginatedResponse } from '../shared/decorators/pagination.decorator';
+import { ResponseOneSchema } from '../shared/decorators/response-one.decorator';
 @ApiTags('Comments')
 @Controller('comment')
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
 
   @Get('game/:idGame')
+  @ApiBearerAuth('JWT-auth')
+  @ApiPaginatedResponse(CommentDto)
   @ApiOperation({
     summary: 'Get all comments of a game',
     description: 'Retrieve all comments for a specific game',
   })
   public async getAllCommentsForGame(
     @Param('idGame') idGame: string,
-  ): Promise<ResponseRequest<Comment[]>> {
-    const comments = await this.commentService.getAllCommentsForGame(idGame);
-    return responseRequest<Comment[]>(
+    @Query('page') page: number = 1,
+    @Query('perPage') perPage: number = 10,
+  ) {
+    const comments = await this.commentService.getAllCommentsForGame(
+      idGame,
+      page,
+      perPage,
+    );
+    return responseRequest<PaginatedOutputDto<CommentDto>>(
       'success',
       'Comments retrieved',
       comments,
@@ -50,7 +52,7 @@ export class CommentController {
 
   @Post(':idGame')
   @ApiBearerAuth('JWT-auth')
-  @ApiResponse(CreateCommentResponse)
+  @ResponseOneSchema(CommentDto)
   @ApiBody({
     description: 'Comment details',
     type: CommentCreateDto,
@@ -79,7 +81,7 @@ export class CommentController {
   @Put(':id')
   @UseInterceptors(CommentOwnerInterceptor)
   @ApiBearerAuth('JWT-auth')
-  @ApiResponse(UpdateCommentResponse)
+  @ResponseOneSchema(CommentDto)
   @ApiBody({
     description: 'Comment details',
     type: CommentUpdateDto,
@@ -103,7 +105,7 @@ export class CommentController {
   @Delete(':id')
   @UseInterceptors(CommentOwnerInterceptor)
   @ApiBearerAuth('JWT-auth')
-  @ApiResponse(DeleteCommentResponse)
+  @ResponseOneSchema(CommentDto)
   @ApiOperation({ summary: 'Delete comment', description: 'Delete a comment' })
   public async delete(
     @Param('id') id: string,

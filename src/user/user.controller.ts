@@ -11,24 +11,13 @@ import {
 
 import { UserService } from './user.service';
 import { User, UserRole } from '@prisma/client';
-import { UserCreateDto, UserUpdateDto } from './user.dto';
+import { UserCreateDto, UserDto, UserUpdateDto } from './user.dto';
 import { ResponseRequest, responseRequest } from '../shared/utils/response';
 import { AuthorizedUser } from '../shared/decorators/user-type.decorator';
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
-import {
-  GetUsersResponse,
-  GetUserResponse,
-  CreateUserResponse,
-  UpdateUserResponse,
-  DeleteUserResponse,
-} from '../shared/swagger/responses';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
+import { ResponseManySchema } from '../shared/decorators/response-many.decorator';
+import { ResponseOneSchema } from '../shared/decorators/response-one.decorator';
 
 @ApiTags('Users')
 @Controller('user')
@@ -37,7 +26,7 @@ export class UserController {
 
   @Get()
   @ApiBearerAuth('JWT-auth')
-  @ApiResponse(GetUsersResponse)
+  @ResponseManySchema(UserDto)
   @ApiOperation({ summary: 'List all users', description: 'List all users' })
   @AuthorizedUser(UserRole.ADMIN)
   public async list(): Promise<ResponseRequest<Partial<User>[]>> {
@@ -47,7 +36,7 @@ export class UserController {
 
   @Get(':id')
   @ApiBearerAuth('JWT-auth')
-  @ApiResponse(GetUserResponse)
+  @ResponseOneSchema(UserDto)
   @ApiOperation({ summary: 'Get user by id', description: 'Get user by id' })
   @AuthorizedUser(UserRole.ADMIN)
   public async get(
@@ -59,7 +48,7 @@ export class UserController {
 
   @Post()
   @ApiBearerAuth('JWT-auth')
-  @ApiResponse(CreateUserResponse)
+  @ResponseOneSchema(UserDto)
   @ApiBody({
     description: 'User me',
     type: UserCreateDto,
@@ -79,7 +68,7 @@ export class UserController {
 
   @Put(':id')
   @ApiBearerAuth('JWT-auth')
-  @ApiResponse(UpdateUserResponse)
+  @ResponseOneSchema(UserDto)
   @ApiBody({
     description: 'User me',
     type: UserUpdateDto,
@@ -100,7 +89,7 @@ export class UserController {
 
   @Put('profile/me')
   @ApiBearerAuth('JWT-auth')
-  @ApiResponse(UpdateUserResponse)
+  @ResponseOneSchema(UserDto)
   @ApiBody({
     description: 'User me',
     type: UserUpdateDto,
@@ -117,7 +106,7 @@ export class UserController {
 
   @Delete(':id')
   @ApiBearerAuth('JWT-auth')
-  @ApiResponse(DeleteUserResponse)
+  @ResponseOneSchema(UserDto)
   @ApiOperation({ summary: 'Delete user', description: 'Delete user' })
   @AuthorizedUser(UserRole.ADMIN)
   public async delete(

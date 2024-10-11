@@ -6,24 +6,16 @@ import {
   Param,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import { TagService } from './tag.service';
 import { Tag } from '@prisma/client';
-import { TagCreateDto, TagUpdateDto } from './tag.dto';
+import { TagCreateDto, TagDto, TagUpdateDto } from './tag.dto';
 import { ResponseRequest, responseRequest } from '../shared/utils/response';
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
-import {
-  GetTagsResponse,
-  CreateTagResponse,
-  UpdateTagResponse,
-  DeleteTagResponse,
-} from '../shared/swagger/responses';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { PaginatedOutputDto } from '../shared/interfaces/pagination';
+import { ApiPaginatedResponse } from '../shared/decorators/pagination.decorator';
+import { ResponseOneSchema } from '../shared/decorators/response-one.decorator';
 
 @ApiTags('Tags')
 @Controller('tag')
@@ -32,16 +24,23 @@ export class TagController {
 
   @Get()
   @ApiBearerAuth('JWT-auth')
-  @ApiResponse(GetTagsResponse)
+  @ApiPaginatedResponse(TagDto)
   @ApiOperation({ summary: 'List all tags', description: 'List all tags' })
-  public async list(): Promise<ResponseRequest<Partial<Tag>[]>> {
-    const tags = await this.tagService.list();
-    return responseRequest<Partial<Tag>[]>('success', 'List of tags', tags);
+  public async list(
+    @Query('page') page: number = 1,
+    @Query('perPage') perPage: number = 10,
+  ) {
+    const tags = await this.tagService.list(page, perPage);
+    return responseRequest<PaginatedOutputDto<TagDto>>(
+      'success',
+      'List of tags',
+      tags,
+    );
   }
 
   @Post()
   @ApiBearerAuth('JWT-auth')
-  @ApiResponse(CreateTagResponse)
+  @ResponseOneSchema(TagDto)
   @ApiBody({
     description: 'Tag details',
     type: TagCreateDto,
@@ -56,7 +55,7 @@ export class TagController {
 
   @Put(':id')
   @ApiBearerAuth('JWT-auth')
-  @ApiResponse(UpdateTagResponse)
+  @ResponseOneSchema(TagDto)
   @ApiBody({
     description: 'Tag details',
     type: TagUpdateDto,
@@ -75,7 +74,7 @@ export class TagController {
 
   @Delete(':id')
   @ApiBearerAuth('JWT-auth')
-  @ApiResponse(DeleteTagResponse)
+  @ResponseOneSchema(TagDto)
   @ApiOperation({ summary: 'Delete tag', description: 'Delete a tag' })
   public async delete(
     @Param('id') id: string,

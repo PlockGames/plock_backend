@@ -4,25 +4,17 @@ import {
   AuthLoginDto,
   AuthParitalSignupDto,
   AuthRefreshTokenDto,
+  AuthRefreshTokenResponseDto,
+  AuthResponseDto,
 } from './auth.dto';
 import { AuthService } from './auth.service';
 import { Public } from '../shared/decorators/public.decoratos';
 import { responseRequest } from '../shared/utils/response';
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
-import {
-  AuthLoginResponse,
-  AuthMeResponse,
-  AuthSignupResponse,
-  UpdateUserResponse,
-} from '../shared/swagger/responses';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 import { User } from '@prisma/client';
+import { UserDto } from '../user/user.dto';
+import { ResponseOneSchema } from '../shared/decorators/response-one.decorator';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -34,7 +26,7 @@ export class AuthController {
     description: 'Login credentials',
     type: AuthLoginDto,
   })
-  @ApiResponse(AuthLoginResponse)
+  @ResponseOneSchema(AuthResponseDto)
   @ApiOperation({ summary: 'Login', description: 'Login' })
   @Public()
   async login(@Body() authDto: AuthLoginDto) {
@@ -47,7 +39,7 @@ export class AuthController {
     description: 'Sign up credentials',
     type: AuthParitalSignupDto,
   })
-  @ApiResponse(AuthSignupResponse)
+  @ResponseOneSchema(AuthResponseDto)
   @ApiOperation({ summary: 'Partial sign up', description: 'Partial sign up' })
   @Public()
   async signup(@Body() authDto: AuthParitalSignupDto) {
@@ -55,16 +47,17 @@ export class AuthController {
     return responseRequest('success', 'Signup success', tokens);
   }
 
+  @Post('signup/complete')
+  @ApiBearerAuth('JWT-auth')
   @ApiBody({
     description: 'Complete sign up credentials',
     type: AuthCompleteSignUpDto,
   })
-  @ApiResponse(UpdateUserResponse)
+  @ResponseOneSchema(UserDto)
   @ApiOperation({
     summary: 'Complete sign up',
     description: 'Complete sign up',
   })
-  @Post('signup/complete')
   async completeSignUp(
     @Req() req: Request,
     @Body() authDto: AuthCompleteSignUpDto,
@@ -85,17 +78,7 @@ export class AuthController {
     description: 'Refresh token',
     type: AuthRefreshTokenDto,
   })
-  @ApiResponse({
-    status: 200,
-    description: 'The user access token',
-    schema: {
-      properties: {
-        accessToken: {
-          type: 'string',
-        },
-      },
-    },
-  })
+  @ResponseOneSchema(AuthRefreshTokenResponseDto)
   @ApiOperation({
     summary: 'Renew access token',
     description: 'Renew access token',
@@ -110,7 +93,7 @@ export class AuthController {
 
   @Get('me')
   @ApiBearerAuth('JWT-auth')
-  @ApiResponse(AuthMeResponse)
+  @ResponseOneSchema(UserDto)
   @ApiOperation({
     summary: 'Get user profile',
     description: 'Get user profile',

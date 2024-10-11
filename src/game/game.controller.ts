@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { GameService } from './game.service';
 import { Game, User } from '@prisma/client';
-import { GameCreateDto, GameResultDto, GameUpdateDto } from './game.dto';
+import { GameCreateDto, GameDto, GameUpdateDto } from './game.dto';
 import { ResponseRequest, responseRequest } from '../shared/utils/response';
 import {
   ApiBearerAuth,
@@ -22,15 +22,12 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import {
-  CreateGameResponse,
-  UpdateGameResponse,
-  DeleteGameResponse,
-} from '../shared/swagger/responses';
+
 import { Request } from 'express';
 import { GameOwnerInterceptor } from '../shared/interceptors/game-owner.interceptor';
 import { ApiPaginatedResponse } from '../shared/decorators/pagination.decorator';
 import { PaginatedOutputDto } from '../shared/interfaces/pagination';
+import { ResponseOneSchema } from '../shared/decorators/response-one.decorator';
 
 @ApiTags('Games')
 @Controller('game')
@@ -38,7 +35,7 @@ export class GameController {
   constructor(private readonly gameService: GameService) {}
 
   @Get()
-  @ApiPaginatedResponse(GameResultDto)
+  @ApiPaginatedResponse(GameDto)
   @ApiBearerAuth('JWT-auth')
   @ApiResponse({ status: 200 })
   @ApiOperation({ summary: 'Get all games', description: 'Get all games' })
@@ -47,7 +44,7 @@ export class GameController {
     @Query('perPage') perPage: number = 10,
   ) {
     const games = await this.gameService.getAllGames(page, perPage);
-    return responseRequest<PaginatedOutputDto<GameResultDto>>(
+    return responseRequest<PaginatedOutputDto<GameDto>>(
       'success',
       'Game found',
       games,
@@ -56,7 +53,7 @@ export class GameController {
 
   @Get(':id')
   @ApiBearerAuth('JWT-auth')
-  @ApiResponse({ status: 200 })
+  @ResponseOneSchema(GameDto)
   @ApiOperation({ summary: 'Get game', description: 'Get a game by id' })
   public async getGame(
     @Param('id') id: string,
@@ -67,7 +64,7 @@ export class GameController {
 
   @Post()
   @ApiBearerAuth('JWT-auth')
-  @ApiResponse(CreateGameResponse)
+  @ResponseOneSchema(GameDto)
   @ApiBody({
     description: 'Game details',
     type: GameCreateDto,
@@ -91,7 +88,7 @@ export class GameController {
   @Put(':id')
   @UseInterceptors(GameOwnerInterceptor)
   @ApiBearerAuth('JWT-auth')
-  @ApiResponse(UpdateGameResponse)
+  @ResponseOneSchema(GameDto)
   @ApiBody({
     description: 'Game details',
     type: GameUpdateDto,
@@ -115,7 +112,7 @@ export class GameController {
   @Delete(':id')
   @UseInterceptors(GameOwnerInterceptor)
   @ApiBearerAuth('JWT-auth')
-  @ApiResponse(DeleteGameResponse)
+  @ResponseOneSchema(GameDto)
   @ApiOperation({ summary: 'Delete game', description: 'Delete a game' })
   public async delete(
     @Param('id') id: string,
@@ -128,7 +125,7 @@ export class GameController {
     );
   }
 
-  //toCheck
+  //toremove
   @Post('win-conditions/:gameId')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({

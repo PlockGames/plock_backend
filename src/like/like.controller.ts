@@ -8,7 +8,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { LikeService } from './like.service';
-import { LikeDto } from './like.dto';
+import { LikeDto, LikeResponseDto } from './like.dto';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -17,6 +17,7 @@ import {
 } from '@nestjs/swagger';
 import { Request } from 'express';
 import { User } from '@prisma/client';
+import { ResponseOneSchema } from 'src/shared/decorators/response-one.decorator';
 
 @ApiTags('Likes')
 @Controller('like')
@@ -24,14 +25,12 @@ export class LikeController {
   constructor(private readonly likeService: LikeService) {}
 
   @Get('count/:gameId')
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Count likes',
     description: 'Count the total likes for a game',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Total likes retrieved successfully',
-  })
+  @ResponseOneSchema(LikeResponseDto)
   async countLikes(@Param('gameId') gameId: string) {
     const totalLikes = await this.likeService.countLikes(gameId);
     return { status: 'success', totalLikes };
@@ -39,10 +38,8 @@ export class LikeController {
 
   @Post()
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({
-    summary: 'Like a game',
-    description: 'Like a game by its ID',
-  })
+  @ApiBearerAuth('JWT-auth')
+  @ResponseOneSchema(LikeResponseDto)
   @ApiResponse({ status: 201, description: 'Game liked successfully' })
   @ApiResponse({ status: 400, description: 'User already liked this game' })
   async likeGame(@Body() likeDto: LikeDto, @Req() req: Request) {
@@ -52,10 +49,7 @@ export class LikeController {
 
   @Delete(':gameId')
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({
-    summary: 'Unlike a game',
-    description: 'Unlike a game by its ID',
-  })
+  @ResponseOneSchema(LikeResponseDto)
   @ApiResponse({ status: 200, description: 'Game unliked successfully' })
   @ApiResponse({ status: 400, description: 'User has not liked this game' })
   async unlikeGame(@Param('gameId') gameId: string, @Req() req: Request) {

@@ -1,14 +1,22 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../shared/modules/prisma/prisma.service';
-import { Tag } from '@prisma/client';
-import { TagCreateDto, TagUpdateDto } from './tag.dto';
+import { Prisma, Tag } from '@prisma/client';
+import { TagCreateDto, TagDto, TagUpdateDto } from './tag.dto';
+import { createPaginator } from 'prisma-pagination';
 
 @Injectable()
 export class TagService {
   constructor(private prisma: PrismaService) {}
 
-  public list(): Promise<Partial<Tag>[]> {
-    return this.prisma.tag.findMany();
+  public list(page: number, perPage: number) {
+    const paginate = createPaginator({ perPage });
+    return paginate<TagDto, Prisma.TagFindManyArgs>(
+      this.prisma.tag,
+      {},
+      {
+        page,
+      },
+    );
   }
 
   public async create(tag: TagCreateDto): Promise<Partial<Tag>> {

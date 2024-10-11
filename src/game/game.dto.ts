@@ -8,7 +8,7 @@ import {
   IsString,
 } from 'class-validator';
 
-export class GameResultDto {
+export class GameDto {
   @ApiProperty({
     type: 'string',
     required: true,
