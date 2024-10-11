@@ -1,12 +1,13 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { User } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
 import { PrismaService } from '../shared/modules/prisma/prisma.service';
-import { GameCreateDto, GameUpdateDto } from './game.dto';
+import { GameCreateDto, GameResultDto, GameUpdateDto } from './game.dto';
 import { MinioClientService } from '../shared/modules/minio-client/minio-client.service';
 import * as fs from 'fs';
 import { tmpdir } from 'os';
 import { Readable } from 'stream';
 import * as path from 'path';
+import { createPaginator } from 'prisma-pagination';
 
 @Injectable()
 export class GameService {
@@ -14,6 +15,30 @@ export class GameService {
     private readonly prisma: PrismaService,
     private readonly minioClientService: MinioClientService,
   ) {}
+
+  public async getAllGames(page: number, perPage: number) {
+    const paginate = createPaginator({ perPage });
+    return paginate<GameResultDto, Prisma.GameFindManyArgs>(
+      this.prisma.game,
+      {
+        where: {},
+        include: {
+          Taggable: {
+            include: {
+              tag: true,
+            },
+          },
+          creator: true,
+        },
+        orderBy: {
+          id: 'desc',
+        },
+      },
+      {
+        page,
+      },
+    );
+  }
 
   public async getGame(id: string) {
     return this.prisma.game.findUnique({
@@ -25,8 +50,6 @@ export class GameService {
           },
         },
         creator: true,
-        objects: true,
-        winConditions: true,
       },
     });
   }

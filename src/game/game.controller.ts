@@ -6,12 +6,13 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Req,
   UseInterceptors,
 } from '@nestjs/common';
 import { GameService } from './game.service';
 import { Game, User } from '@prisma/client';
-import { GameCreateDto, GameUpdateDto } from './game.dto';
+import { GameCreateDto, GameResultDto, GameUpdateDto } from './game.dto';
 import { ResponseRequest, responseRequest } from '../shared/utils/response';
 import {
   ApiBearerAuth,
@@ -28,15 +29,30 @@ import {
 } from '../shared/swagger/responses';
 import { Request } from 'express';
 import { GameOwnerInterceptor } from '../shared/interceptors/game-owner.interceptor';
-import { R2Service } from '../shared/modules/r2/r2.service';
+import { ApiPaginatedResponse } from '../shared/decorators/pagination.decorator';
+import { PaginatedOutputDto } from '../shared/interfaces/pagination';
 
 @ApiTags('Games')
 @Controller('game')
 export class GameController {
-  constructor(
-    private readonly gameService: GameService,
-    private readonly r2Service: R2Service,
-  ) {}
+  constructor(private readonly gameService: GameService) {}
+
+  @Get()
+  @ApiPaginatedResponse(GameResultDto)
+  @ApiBearerAuth('JWT-auth')
+  @ApiResponse({ status: 200 })
+  @ApiOperation({ summary: 'Get all games', description: 'Get all games' })
+  async findAll(
+    @Query('page') page: number = 1,
+    @Query('perPage') perPage: number = 10,
+  ) {
+    const games = await this.gameService.getAllGames(page, perPage);
+    return responseRequest<PaginatedOutputDto<GameResultDto>>(
+      'success',
+      'Game found',
+      games,
+    );
+  }
 
   @Get(':id')
   @ApiBearerAuth('JWT-auth')

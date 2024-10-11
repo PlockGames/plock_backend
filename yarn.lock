@@ -7669,6 +7669,11 @@ pretty-quick@^4.0.0:
     picomatch "^3.0.1"
     tslib "^2.6.2"
 
+prisma-pagination@^0.2.3:
+  version "0.2.3"
+  resolved "https://registry.yarnpkg.com/prisma-pagination/-/prisma-pagination-0.2.3.tgz#5b76b4d2a1328930fb63b28794cbedcbe06a07fd"
+  integrity sha512-KVKCGz5BVTYK64dpqCo7ITNFN02UN5hSzBYyR4vqNF7I4BetUeO/q7B7FECmCOPIyCBWYf2Zte68pD9S2khD3g==
+
 prisma@5.14.0:
   version "5.14.0"
   resolved "https://registry.npmjs.org/prisma/-/prisma-5.14.0.tgz"

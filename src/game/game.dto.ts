@@ -8,6 +8,89 @@ import {
   IsString,
 } from 'class-validator';
 
+export class GameResultDto {
+  @ApiProperty({
+    type: 'string',
+    required: true,
+    description: 'ID of the game',
+  })
+  @IsString()
+  id: string;
+
+  @ApiProperty({
+    type: 'string',
+    required: true,
+    description: 'Title of the game',
+  })
+  @IsString()
+  title: string;
+
+  @ApiProperty({
+    type: 'array',
+    required: true,
+    description: 'Array of tag IDs',
+    items: { type: 'string' },
+  })
+  @IsArray()
+  tags: string[];
+
+  @ApiProperty({
+    type: 'string',
+    required: true,
+    description: 'Playtime of the game',
+  })
+  @IsString()
+  playTime: string;
+
+  @ApiProperty({
+    type: 'string',
+    required: true,
+    description: 'Type of the game',
+  })
+  @IsString()
+  gameType: string;
+
+  @ApiProperty({
+    type: 'string',
+    required: true,
+    description: 'Thumbnail URL of the game',
+  })
+  @IsString()
+  thumbnailUrl: string;
+
+  @ApiProperty({
+    type: 'integer',
+    required: true,
+    description: 'Number of likes for the game',
+  })
+  @IsInt()
+  likes: number;
+
+  @ApiProperty({
+    type: 'string',
+    required: true,
+    description: 'Content game JSON',
+  })
+  @IsObject()
+  contentGame: object;
+
+  @ApiProperty({
+    type: 'string',
+    required: true,
+    description: 'Date of creation',
+  })
+  @IsString()
+  createdAt: string;
+
+  @ApiProperty({
+    type: 'string',
+    required: true,
+    description: 'Date of update',
+  })
+  @IsString()
+  updatedAt: string;
+}
+
 export class GameCreateDto {
   @ApiProperty({
     type: 'string',
