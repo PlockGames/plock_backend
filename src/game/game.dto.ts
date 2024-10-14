@@ -159,13 +159,13 @@ export class GameUpdateDto {
 
   @ApiProperty({
     type: 'array',
-    required: true,
+    required: false,
     description: 'Array of tag IDs',
     items: { type: 'string' },
   })
   @IsOptional()
   @IsArray()
-  tags: string[];
+  tags?: string[];
 
   @ApiProperty({
     type: 'string',

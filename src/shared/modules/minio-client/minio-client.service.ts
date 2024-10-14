@@ -2,10 +2,7 @@ import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { MinioService } from 'nestjs-minio-client';
 import * as crypto from 'crypto';
 import * as sharp from 'sharp';
-import * as ffmpeg from 'fluent-ffmpeg';
-import * as fs from 'fs';
 import * as path from 'path';
-import { tmpdir } from 'os';
 
 @Injectable()
 export class MinioClientService {
@@ -80,19 +77,6 @@ export class MinioClientService {
             thumbnailBuffer.length,
             metaData,
           );
-        } else if (isVideo) {
-          thumbnailFileName = `videos/thumbnails-${filename}.jpg`;
-          const thumbnailBuffer = await this.createVideoThumbnail(
-            file.buffer,
-            thumbnailFileName,
-          );
-          await this.client.putObject(
-            this.baseBucket,
-            thumbnailFileName,
-            thumbnailBuffer,
-            thumbnailBuffer.length,
-            { 'Content-Type': 'image/jpeg' },
-          );
         }
       }
 
@@ -124,41 +108,6 @@ export class MinioClientService {
 
   private async createImageThumbnail(buffer: Buffer) {
     return sharp(buffer).resize(200, 200).toBuffer();
-  }
-
-  private async createVideoThumbnail(
-    buffer: Buffer,
-    filename: string,
-  ): Promise<Buffer> {
-    const tempFilePath = path.join(tmpdir(), `${Date.now()}-temp-video`);
-    const outputImagePath = path.join(tmpdir(), filename);
-
-    fs.writeFileSync(tempFilePath, buffer);
-
-    return new Promise((resolve, reject) => {
-      ffmpeg(tempFilePath)
-        .screenshots({
-          count: 1,
-          folder: path.dirname(outputImagePath),
-          filename: path.basename(outputImagePath),
-          size: '320x240',
-        })
-        .on('end', () => {
-          const thumbnailBuffer = fs.readFileSync(outputImagePath);
-          fs.unlinkSync(tempFilePath);
-          fs.unlinkSync(outputImagePath);
-          resolve(thumbnailBuffer);
-        })
-        .on('error', () => {
-          fs.unlinkSync(tempFilePath);
-          reject(
-            new HttpException(
-              'Error creating video thumbnail',
-              HttpStatus.INTERNAL_SERVER_ERROR,
-            ),
-          );
-        });
-    });
   }
 
   public async uploadJsonFile(

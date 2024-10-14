@@ -1,10 +1,14 @@
 import { Module } from '@nestjs/common';
 import { GameService } from './game.service';
 import { GameController } from './game.controller';
-import { R2Module } from '../shared/modules/r2/r2module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [R2Module],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+  ],
   providers: [GameService],
   controllers: [GameController],
 })
