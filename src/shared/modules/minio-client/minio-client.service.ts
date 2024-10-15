@@ -14,13 +14,14 @@ export class MinioClientService {
   }
 
   constructor(private readonly minio: MinioService) {
-    this.logger = new Logger('MinioStorageService');
+    this.logger = new Logger('MinioClientService');
   }
 
   public async uploadMedia(
     file: Express.Multer.File,
     createThumbnail: boolean,
   ) {
+    this.logger.log(`Uploading media file: ${file.originalname}`);
     try {
       const isImage =
         file.mimetype.includes('jpeg') ||
@@ -38,6 +39,7 @@ export class MinioClientService {
         file.mimetype.includes('wav');
 
       if (!isImage && !isVideo && !isAudio) {
+        this.logger.warn(`Unsupported file type: ${file.mimetype}`);
         throw new HttpException(
           'Unsupported file type',
           HttpStatus.BAD_REQUEST,
@@ -64,24 +66,26 @@ export class MinioClientService {
         metaData,
       );
 
+      this.logger.log(`File uploaded successfully: ${filename}`);
+
       let thumbnailFileName: string | undefined;
 
-      if (createThumbnail) {
-        if (isImage) {
-          thumbnailFileName = `images/thumbnails-${filename}`;
-          const thumbnailBuffer = await this.createImageThumbnail(file.buffer);
-          await this.client.putObject(
-            this.baseBucket,
-            thumbnailFileName,
-            thumbnailBuffer,
-            thumbnailBuffer.length,
-            metaData,
-          );
-        }
+      if (createThumbnail && isImage) {
+        thumbnailFileName = `images/thumbnails-${filename}`;
+        const thumbnailBuffer = await this.createImageThumbnail(file.buffer);
+        await this.client.putObject(
+          this.baseBucket,
+          thumbnailFileName,
+          thumbnailBuffer,
+          thumbnailBuffer.length,
+          metaData,
+        );
+        this.logger.log(`Thumbnail created and uploaded: ${thumbnailFileName}`);
       }
 
       return { filename, thumbnailFileName };
     } catch (error) {
+      this.logger.error('Error uploading media file: ', error);
       throw new HttpException(
         'Error uploading file, please try again',
         HttpStatus.BAD_REQUEST,
@@ -90,6 +94,7 @@ export class MinioClientService {
   }
 
   public async getPresignedUrl(filename: string) {
+    this.logger.log(`Generating presigned URL for file: ${filename}`);
     return `${process.env.MINIO_ENDPOINT}:${process.env.MINIO_PORT}/${this.baseBucket}/${filename}`;
   }
 
@@ -97,16 +102,23 @@ export class MinioClientService {
     objectName: string,
     baseBucket: string = this.baseBucket,
   ) {
+    this.logger.log(
+      `Deleting object: ${objectName} from bucket: ${baseBucket}`,
+    );
     this.client.removeObject(baseBucket, objectName, {}, (err) => {
-      if (err)
+      if (err) {
+        this.logger.error('Error deleting object: ', err);
         throw new HttpException(
           'Oops Something went wrong',
           HttpStatus.BAD_REQUEST,
         );
+      }
+      this.logger.log(`Object deleted: ${objectName}`);
     });
   }
 
   private async createImageThumbnail(buffer: Buffer) {
+    this.logger.log('Creating image thumbnail');
     return sharp(buffer).resize(200, 200).toBuffer();
   }
 
@@ -115,8 +127,10 @@ export class MinioClientService {
     gameTitle: string,
     type: string,
   ) {
+    this.logger.log(`Uploading JSON file for game: ${gameTitle}`);
     try {
       if (file.mimetype !== 'application/json') {
+        this.logger.warn(`Unsupported file type: ${file.mimetype}`);
         throw new HttpException(
           'Unsupported file type',
           HttpStatus.BAD_REQUEST,
@@ -142,6 +156,7 @@ export class MinioClientService {
         metaData,
       );
 
+      this.logger.log(`JSON file uploaded successfully: ${filename}`);
       return { filename };
     } catch (error) {
       this.logger.error('Error uploading JSON file: ', error);
@@ -158,8 +173,10 @@ export class MinioClientService {
     gameTitle: string,
     type: string,
   ) {
+    this.logger.log(`Updating JSON file for game: ${gameTitle}`);
     try {
       if (existingFileName) {
+        this.logger.log(`Deleting existing file: ${existingFileName}`);
         await this.delete(existingFileName);
       }
 
@@ -182,6 +199,7 @@ export class MinioClientService {
         metaData,
       );
 
+      this.logger.log(`JSON file updated successfully: ${filename}`);
       return { filename };
     } catch (error) {
       this.logger.error('Error updating JSON file: ', error);
@@ -193,6 +211,7 @@ export class MinioClientService {
   }
 
   public async deleteFolder(folderName: string) {
+    this.logger.log(`Deleting folder: ${folderName}`);
     try {
       const objectsStream = this.client.listObjectsV2(
         this.baseBucket,
@@ -218,6 +237,7 @@ export class MinioClientService {
         for (const objectName of objectsToDelete) {
           await this.delete(objectName);
         }
+        this.logger.log(`All objects in folder deleted: ${folderName}`);
       });
     } catch (error) {
       this.logger.error('Error deleting folder: ', error);
@@ -229,8 +249,8 @@ export class MinioClientService {
   }
 
   public async folderExists(folderName: string): Promise<boolean> {
+    this.logger.log(`Checking if folder exists: ${folderName}`);
     try {
-      // Intentar listar objetos con el prefijo del nombre del folder
       const objectsStream = this.client.listObjectsV2(
         this.baseBucket,
         folderName,
@@ -241,15 +261,13 @@ export class MinioClientService {
         let exists = false;
 
         objectsStream.on('data', (obj) => {
-          // Si encontramos al menos un objeto, significa que el folder existe
           if (obj.name.startsWith(folderName)) {
             exists = true;
-            resolve(true); // Si encontramos algo, resolvemos con true
+            resolve(true);
           }
         });
 
         objectsStream.on('end', () => {
-          // Si no se encontró nada, resolvemos con false
           resolve(exists);
         });
 

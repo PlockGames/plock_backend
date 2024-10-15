@@ -1,9 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../shared/modules/prisma/prisma.service';
 import { User, Game } from '@prisma/client';
 
 @Injectable()
 export class RecommendationService {
+  private readonly logger = new Logger(RecommendationService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   private LIKE_WEIGHT = 3;
@@ -11,6 +13,8 @@ export class RecommendationService {
   private PLAYTIME_WEIGHT = 1; // Base weight, to be multiplied by the normalized time
 
   async getRecommendations(user: User, limit: number = 10): Promise<Game[]> {
+    this.logger.log(`Generating recommendations for user ID: ${user.id}`);
+
     // 1. Obtain user interactions
     const [likedGames, commentedGames, playHistories] = await Promise.all([
       this.prisma.like.findMany({
@@ -33,10 +37,13 @@ export class RecommendationService {
       }),
     ]);
 
+    this.logger.log(
+      `User ID: ${user.id} - Liked games: ${likedGames.length}, Commented games: ${commentedGames.length}, Play histories: ${playHistories.length}`,
+    );
     // Calculate affinity by tag
     const tagAffinity: { [tagId: string]: number } = {};
 
-    // Proccess likes
+    // Process likes
     likedGames.forEach((like) => {
       like.game.Taggable.forEach((taggable) => {
         tagAffinity[taggable.tagId] =
@@ -44,7 +51,7 @@ export class RecommendationService {
       });
     });
 
-    // Proccess comments
+    // Process comments
     commentedGames.forEach((comment) => {
       comment.game.Taggable.forEach((taggable) => {
         tagAffinity[taggable.tagId] =
@@ -69,14 +76,22 @@ export class RecommendationService {
       });
     });
 
+    this.logger.log(
+      `Tag affinities calculated: ${JSON.stringify(tagAffinity)}`,
+    );
     // 3. Normalize affinity
     const totalAffinity = Object.values(tagAffinity).reduce(
       (sum, value) => sum + value,
       0,
     );
+
     for (const tagId in tagAffinity) {
       tagAffinity[tagId] /= totalAffinity;
     }
+
+    this.logger.log(
+      `Normalized tag affinities: ${JSON.stringify(tagAffinity)}`,
+    );
 
     // 4. Get non-interacted games
     const interactedGameIds = new Set<string>([
@@ -92,6 +107,9 @@ export class RecommendationService {
       include: { Taggable: { include: { tag: true } } },
     });
 
+    this.logger.log(
+      `Found ${candidateGames.length} candidate games for recommendations.`,
+    );
     // 5. Calculate score for each game
     const gameScores: { game: Game; score: number }[] = [];
 
@@ -106,8 +124,15 @@ export class RecommendationService {
       }
     });
 
+    this.logger.log(`Calculated scores for ${gameScores.length} games.`);
+
     // 6. Sort and return recommendations
     gameScores.sort((a, b) => b.score - a.score);
-    return gameScores.slice(0, limit).map((item) => item.game);
+    const recommendations = gameScores.slice(0, limit).map((item) => item.game);
+
+    this.logger.log(
+      `Returning ${recommendations.length} recommendations for user ID: ${user.id}`,
+    );
+    return recommendations;
   }
 }

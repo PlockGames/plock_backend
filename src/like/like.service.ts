@@ -1,12 +1,17 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../shared/modules/prisma/prisma.service';
 import { User } from '@prisma/client';
 
 @Injectable()
 export class LikeService {
+  private readonly logger = new Logger(LikeService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async likeGame(user: User, gameId: string) {
+    this.logger.log(
+      `User ID: ${user.id} attempting to like game ID: ${gameId}`,
+    );
     const existingLike = await this.prisma.like.findUnique({
       where: {
         userId_gameId: { userId: user.id, gameId },
@@ -14,6 +19,9 @@ export class LikeService {
     });
 
     if (existingLike) {
+      this.logger.warn(
+        `User ID: ${user.id} has already liked game ID: ${gameId}`,
+      );
       throw new ForbiddenException('You have already liked this game');
     }
 
@@ -24,6 +32,8 @@ export class LikeService {
       },
     });
 
+    this.logger.log(`User ID: ${user.id} liked game ID: ${gameId}`);
+
     await this.prisma.game.update({
       where: { id: gameId },
       data: { likes: { increment: 1 } },
@@ -31,6 +41,9 @@ export class LikeService {
   }
 
   async unlikeGame(user: User, gameId: string) {
+    this.logger.log(
+      `User ID: ${user.id} attempting to unlike game ID: ${gameId}`,
+    );
     const like = await this.prisma.like.findUnique({
       where: {
         userId_gameId: { userId: user.id, gameId },
@@ -38,6 +51,7 @@ export class LikeService {
     });
 
     if (!like) {
+      this.logger.warn(`User ID: ${user.id} has not liked game ID: ${gameId}`);
       throw new ForbiddenException('You have not liked this game');
     }
 
@@ -47,6 +61,8 @@ export class LikeService {
       },
     });
 
+    this.logger.log(`User ID: ${user.id} unliked game ID: ${gameId}`);
+
     await this.prisma.game.update({
       where: { id: gameId },
       data: { likes: { decrement: 1 } },
@@ -54,8 +70,10 @@ export class LikeService {
   }
 
   async countLikes(gameId: string) {
-    return this.prisma.like.count({
+    const count = await this.prisma.like.count({
       where: { gameId },
     });
+    this.logger.log(`Counted ${count} likes for game ID: ${gameId}`);
+    return count;
   }
 }
