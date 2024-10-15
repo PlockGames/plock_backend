@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Req,
 } from '@nestjs/common';
 
@@ -18,6 +19,7 @@ import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 import { ResponseManySchema } from '../shared/decorators/response-many.decorator';
 import { ResponseOneSchema } from '../shared/decorators/response-one.decorator';
+import { PaginatedOutputDto } from 'src/shared/interfaces/pagination';
 
 @ApiTags('Users')
 @Controller('user')
@@ -29,9 +31,16 @@ export class UserController {
   @ResponseManySchema(UserDto)
   @ApiOperation({ summary: 'List all users', description: 'List all users' })
   @AuthorizedUser(UserRole.ADMIN)
-  public async list(): Promise<ResponseRequest<Partial<User>[]>> {
-    const users = await this.userService.list();
-    return responseRequest<Partial<User>[]>('success', 'List of users', users);
+  public async list(
+    @Query('page') page: number = 1,
+    @Query('perPage') perPage: number = 10,
+  ): Promise<ResponseRequest<PaginatedOutputDto<UserDto>>> {
+    const users = await this.userService.list(page, perPage);
+    return responseRequest<PaginatedOutputDto<UserDto>>(
+      'success',
+      'List of users',
+      users,
+    );
   }
 
   @Get(':id')

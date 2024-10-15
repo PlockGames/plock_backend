@@ -91,6 +91,64 @@ export class GameDto {
   updatedAt: string;
 }
 
+export class PlayHistoryDto {
+  @ApiProperty({
+    type: 'string',
+    required: true,
+    description: 'ID of the play history',
+  })
+  @IsString()
+  id: string;
+
+  @ApiProperty({
+    type: 'string',
+    required: true,
+    description: 'ID of the user',
+  })
+  @IsString()
+  userId: string;
+
+  @ApiProperty({
+    type: 'string',
+    required: true,
+    description: 'ID of the game',
+  })
+  @IsString()
+  gameId: string;
+
+  @ApiProperty({
+    type: 'number',
+    required: true,
+    description: 'Playtime in seconds',
+  })
+  @IsInt()
+  playTime: number;
+
+  @ApiProperty({
+    type: 'string',
+    required: true,
+    description: 'Date of last played',
+  })
+  @IsString()
+  lastPlayed: string;
+
+  @ApiProperty({
+    type: 'string',
+    required: true,
+    description: 'Date of creation',
+  })
+  @IsString()
+  createdAt: string;
+
+  @ApiProperty({
+    type: 'string',
+    required: true,
+    description: 'Date of update',
+  })
+  @IsString()
+  updatedAt: string;
+}
+
 export class GameCreateDto {
   @ApiProperty({
     type: 'string',
@@ -211,4 +269,14 @@ export class GameUpdateDto {
   @IsOptional()
   @IsObject()
   contentGame?: object;
+}
+
+export class PlayTimeDto {
+  @ApiProperty({
+    type: 'number',
+    required: true,
+    description: 'Playtime of the game',
+  })
+  @IsInt()
+  playTime: number;
 }

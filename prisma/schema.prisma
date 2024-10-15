@@ -29,10 +29,11 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  media      Media[]   @relation("UserMedia")
-  comments   Comment[] @relation("UserComments")
-  Game       Game[]    @relation("UserGames")
-  likedGames Like[]
+  media       Media[]       @relation("UserMedia")
+  comments    Comment[]     @relation("UserComments")
+  Game        Game[]        @relation("UserGames")
+  likedGames  Like[]
+  PlayHistory PlayHistory[]
 }
 
 model Media {
@@ -90,6 +91,7 @@ model Game {
 
   objects       ObjectsGame[]      @relation("GameObjects")
   winConditions WinConditionGame[] @relation("GameWinCondition")
+  PlayHistory   PlayHistory[]
 
   @@index([creatorId])
 }
@@ -152,5 +154,20 @@ model Taggable {
   updatedAt DateTime @default(now())
 
   @@unique([tagId, gameId])
+  @@index([gameId])
+}
+
+model PlayHistory {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gameId     String
+  game       Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  playTime   Int // in seconds
+  lastPlayed DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId])
   @@index([gameId])
 }
