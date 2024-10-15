@@ -1,8 +1,19 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { Logger, ValidationPipe } from '@nestjs/common';
+import Swagger from './shared/swagger/init';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(3000);
+  const globalPrefix = 'api';
+  app.useGlobalPipes(new ValidationPipe());
+  app.enableCors();
+  const swagger = new Swagger(app);
+  app.setGlobalPrefix(globalPrefix);
+  await app.listen(process.env.PORT);
+  swagger.status();
+  Logger.log(
+    `🚀 Application is running on: ${process.env.HOST}${process.env.PORT ? ':' + process.env.PORT : ''}/${globalPrefix}`,
+  );
 }
 bootstrap();
