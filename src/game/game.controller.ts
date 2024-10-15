@@ -12,13 +12,18 @@ import {
 } from '@nestjs/common';
 import { GameService } from './game.service';
 import { Game, User } from '@prisma/client';
-import { GameCreateDto, GameDto, GameUpdateDto } from './game.dto';
+import {
+  GameCreateDto,
+  GameDto,
+  GameUpdateDto,
+  PlayHistoryDto,
+  PlayTimeDto,
+} from './game.dto';
 import { ResponseRequest, responseRequest } from '../shared/utils/response';
 import {
   ApiBearerAuth,
   ApiBody,
   ApiOperation,
-  ApiParam,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -28,11 +33,16 @@ import { GameOwnerInterceptor } from '../shared/interceptors/game-owner.intercep
 import { ApiPaginatedResponse } from '../shared/decorators/pagination.decorator';
 import { PaginatedOutputDto } from '../shared/interfaces/pagination';
 import { ResponseOneSchema } from '../shared/decorators/response-one.decorator';
+import { RecommendationService } from '../recommendation/recommendation.service';
+import { ResponseManySchema } from '../shared/decorators/response-many.decorator';
 
 @ApiTags('Games')
 @Controller('game')
 export class GameController {
-  constructor(private readonly gameService: GameService) {}
+  constructor(
+    private readonly gameService: GameService,
+    private readonly recommendationService: RecommendationService,
+  ) {}
 
   @Get()
   @ApiPaginatedResponse(GameDto)
@@ -60,6 +70,24 @@ export class GameController {
   ): Promise<ResponseRequest<Partial<Game>>> {
     const game = await this.gameService.getGame(id);
     return responseRequest<Partial<Game>>('success', 'Game found', game);
+  }
+
+  @Get('recommendation')
+  @ApiBearerAuth('JWT-auth')
+  @ResponseManySchema(GameDto)
+  @ApiOperation({
+    summary: 'Get recommendations',
+    description: 'Get game recommendations',
+  })
+  async getRecommendations(
+    @Req() req: Request,
+    @Query('limit') limit: number,
+  ): Promise<ResponseRequest<Game[]>> {
+    const games = await this.recommendationService.getRecommendations(
+      req.user as User,
+      limit,
+    );
+    return responseRequest<Game[]>('success', 'Recommendations found', games);
   }
 
   @Post()
@@ -123,5 +151,25 @@ export class GameController {
       'Game deleted',
       gameDeleted,
     );
+  }
+
+  @Post(':id/playtime')
+  @ApiBearerAuth('JWT-auth')
+  @ResponseOneSchema(PlayHistoryDto)
+  @ApiBody({
+    description: 'Playtime details',
+    type: PlayTimeDto,
+  })
+  @ApiOperation({
+    summary: 'Record playtime',
+    description: 'Record playtime for a game',
+  })
+  public async recordPlayTime(
+    @Req() req: Request,
+    @Param('id') gameId: string,
+    @Body('playTime') playTime: PlayTimeDto,
+  ): Promise<ResponseRequest<Partial<Game>>> {
+    await this.gameService.recordPlayTime(req.user as User, gameId, playTime);
+    return responseRequest<Partial<Game>>('success', 'Playtime recorded', null);
   }
 }

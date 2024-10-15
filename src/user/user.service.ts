@@ -4,20 +4,28 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../shared/modules/prisma/prisma.service';
-import { User } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
 import { prismaExclude } from '../shared/modules/prisma/prisma-exclude';
-import { UserCreateDto, UserUpdateDto } from './user.dto';
+import { UserCreateDto, UserDto, UserUpdateDto } from './user.dto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { AuthCompleteSignUpDto, AuthParitalSignupDto } from '../auth/auth.dto';
 import * as bcrypt from 'bcrypt';
+import { createPaginator } from 'prisma-pagination';
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  public list(): Promise<Partial<User>[]> {
-    return this.prisma.user.findMany({
-      select: prismaExclude('User', ['password', 'refreshToken']),
-    });
+  public list(page: number, perPage: number) {
+    const paginate = createPaginator({ perPage });
+    return paginate<UserDto, Prisma.UserFindManyArgs>(
+      this.prisma.user,
+      {
+        select: prismaExclude('User', ['password', 'refreshToken']),
+      },
+      {
+        page,
+      },
+    );
   }
 
   public async get(id: string): Promise<Partial<User>> {

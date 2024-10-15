@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Prisma, User } from '@prisma/client';
 import { PrismaService } from '../shared/modules/prisma/prisma.service';
-import { GameCreateDto, GameDto, GameUpdateDto } from './game.dto';
+import { GameCreateDto, GameDto, GameUpdateDto, PlayTimeDto } from './game.dto';
 import { MinioClientService } from '../shared/modules/minio-client/minio-client.service';
 import * as fs from 'fs';
 import { tmpdir } from 'os';
@@ -163,5 +163,30 @@ export class GameService {
     return this.prisma.game.delete({
       where: { id },
     });
+  }
+
+  async recordPlayTime(user: User, gameId: string, playTimeDto: PlayTimeDto) {
+    const existingRecord = await this.prisma.playHistory.findFirst({
+      where: { userId: user.id, gameId },
+    });
+
+    if (existingRecord) {
+      await this.prisma.playHistory.update({
+        where: { id: existingRecord.id },
+        data: {
+          playTime: existingRecord.playTime + playTimeDto.playTime,
+          lastPlayed: new Date(),
+        },
+      });
+    } else {
+      await this.prisma.playHistory.create({
+        data: {
+          userId: user.id,
+          gameId,
+          playTime: playTimeDto.playTime,
+        },
+      });
+    }
+    return existingRecord;
   }
 }

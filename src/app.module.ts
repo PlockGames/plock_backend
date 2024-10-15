@@ -11,6 +11,7 @@ import { TagModule } from './tag/tag.module';
 import { MinioClientModule } from './shared/modules/minio-client/minio-client.module';
 import { LikeModule } from './like/like.module';
 import { ConfigModule } from '@nestjs/config';
+import { RecommendationModule } from './recommendation/recommendation.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ConfigModule } from '@nestjs/config';
     TagModule,
     MinioClientModule,
     LikeModule,
+    RecommendationModule,
   ],
   providers: [
     {

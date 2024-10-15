@@ -12,10 +12,13 @@ export const ApiPaginatedResponse = <TModel extends Type<any>>(
         allOf: [
           {
             properties: {
+              status: { type: 'string', example: 'success' },
+              message: { type: 'string', example: 'Message example' },
               data: {
                 type: 'array',
                 items: { $ref: getSchemaPath(model) },
               },
+              timestamp: { type: 'string', example: new Date().toISOString() },
             },
           },
           {
