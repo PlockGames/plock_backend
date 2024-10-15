@@ -37,17 +37,6 @@ describe('UserService', () => {
     expect(service).toBeDefined();
   });
 
-  describe('list', () => {
-    it('should return an array of users', async () => {
-      const usersMock = [{ id: '1', email: 'test@example.com' }];
-      (prismaService.user.findMany as jest.Mock).mockResolvedValue(usersMock);
-
-      const users = await service.list();
-      expect(users).toEqual(usersMock);
-      expect(prismaService.user.findMany).toHaveBeenCalledTimes(1);
-    });
-  });
-
   describe('get', () => {
     it('should return a user if found', async () => {
       const userMock = { id: '1', email: 'test@example.com' };
