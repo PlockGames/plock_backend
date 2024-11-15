@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Media } from '@prisma/client';
 import {
   IsArray,
   IsInt,
@@ -279,4 +280,36 @@ export class PlayTimeDto {
   })
   @IsInt()
   playTime: number;
+}
+
+export class MediaDto implements Media {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  filename: string;
+
+  @ApiProperty()
+  mimetype: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  size: number;
+
+  @ApiProperty()
+  thumbnailFileName: string;
+
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiProperty()
+  updatedAt: Date;
+
+  @ApiProperty()
+  userId: string;
+
+  @ApiProperty()
+  gameId: string;
 }

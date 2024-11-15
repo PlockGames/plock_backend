@@ -289,4 +289,93 @@ export class MinioClientService {
       );
     }
   }
+
+  public async uploadMultipleMedia(
+    files: Express.Multer.File[],
+    gameTitle: string,
+    createThumbnail: boolean,
+  ): Promise<{ filename: string; thumbnailFileName?: string }[]> {
+    this.logger.log(`Uploading multiple media files for game: ${gameTitle}`);
+    const uploadResults = [];
+
+    for (const file of files) {
+      this.logger.log(`Uploading media file: ${file.originalname}`);
+      try {
+        const isImage =
+          file.mimetype.includes('jpeg') ||
+          file.mimetype.includes('png') ||
+          file.mimetype.includes('gif') ||
+          file.mimetype.includes('webp') ||
+          file.mimetype.includes('svg');
+
+        const isVideo =
+          file.mimetype.includes('mp4') ||
+          file.mimetype.includes('mov') ||
+          file.mimetype.includes('avi');
+
+        const isAudio =
+          file.mimetype.includes('audio') ||
+          file.mimetype.includes('mp3') ||
+          file.mimetype.includes('wav');
+
+        if (!isImage && !isVideo && !isAudio) {
+          this.logger.warn(`Unsupported file type: ${file.mimetype}`);
+          throw new HttpException(
+            `Unsupported file type: ${file.mimetype}`,
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+
+        const temp_filename = Date.now().toString();
+        const hashedFileName = crypto
+          .createHash('md5')
+          .update(temp_filename)
+          .digest('hex');
+        const ext = path.extname(file.originalname);
+        const metaData = {
+          'Content-Type': file.mimetype,
+        };
+        const filename = `${hashedFileName}${ext}`;
+        const filePath = `games/${gameTitle}/${filename}`;
+
+        await this.client.putObject(
+          this.baseBucket,
+          filePath,
+          file.buffer,
+          file.buffer.length,
+          metaData,
+        );
+
+        this.logger.log(`File uploaded successfully: ${filePath}`);
+
+        let thumbnailFileName: string | undefined;
+
+        if (createThumbnail && isImage) {
+          thumbnailFileName = `games/${gameTitle}/thumbnails-${filename}`;
+          const thumbnailBuffer = await this.createImageThumbnail(file.buffer);
+
+          await this.client.putObject(
+            this.baseBucket,
+            thumbnailFileName,
+            thumbnailBuffer,
+            thumbnailBuffer.length,
+            metaData,
+          );
+          this.logger.log(
+            `Thumbnail created and uploaded: ${thumbnailFileName}`,
+          );
+        }
+
+        uploadResults.push({ filename: filePath, thumbnailFileName });
+      } catch (error) {
+        this.logger.error(`Error uploading file ${file.originalname}: `, error);
+        throw new HttpException(
+          `Error uploading file ${file.originalname}, please try again`,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
+
+    return uploadResults;
+  }
 }

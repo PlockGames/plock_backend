@@ -3,15 +3,18 @@ import {
   Controller,
   Delete,
   Get,
+  HttpException,
+  HttpStatus,
   Param,
   Post,
   Put,
   Query,
   Req,
+  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
 import { GameService } from './game.service';
-import { Game, User } from '@prisma/client';
+import { Game, Media, User } from '@prisma/client';
 import {
   GameCreateDto,
   GameDto,
@@ -35,6 +38,8 @@ import { PaginatedOutputDto } from '../shared/interfaces/pagination';
 import { ResponseOneSchema } from '../shared/decorators/response-one.decorator';
 import { RecommendationService } from '../recommendation/recommendation.service';
 import { ResponseManySchema } from '../shared/decorators/response-many.decorator';
+import { memoryStorage } from 'multer';
+import { FilesInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Games')
 @Controller('game')
@@ -171,5 +176,64 @@ export class GameController {
   ): Promise<ResponseRequest<Partial<Game>>> {
     await this.gameService.recordPlayTime(req.user as User, gameId, playTime);
     return responseRequest<Partial<Game>>('success', 'Playtime recorded', null);
+  }
+
+  @Post(':id/images')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Upload multiple images for a game',
+    description: 'Sube múltiples imágenes para un juego específico',
+  })
+  @ApiBody({
+    description: 'List of image files to upload',
+    type: 'array',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'string',
+        format: 'binary',
+      },
+    },
+  })
+  @UseInterceptors(
+    FilesInterceptor('images', 10, {
+      storage: memoryStorage(),
+      fileFilter: (req, file, callback) => {
+        if (
+          file.mimetype.includes('jpeg') ||
+          file.mimetype.includes('png') ||
+          file.mimetype.includes('gif') ||
+          file.mimetype.includes('webp') ||
+          file.mimetype.includes('svg')
+        ) {
+          callback(null, true);
+        } else {
+          callback(
+            new HttpException(
+              `Unsupported file type: ${file.mimetype}`,
+              HttpStatus.BAD_REQUEST,
+            ),
+            false,
+          );
+        }
+      },
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
+  public async uploadImages(
+    @Param('id') gameId: string,
+    @UploadedFiles() files: Express.Multer.File[],
+  ): Promise<ResponseRequest<Media[]>> {
+    if (!files || files.length === 0) {
+      throw new HttpException('No files provided', HttpStatus.BAD_REQUEST);
+    }
+
+    const media = await this.gameService.uploadGameImages(gameId, files);
+
+    return responseRequest<Media[]>(
+      'success',
+      'Images uploaded successfully',
+      media,
+    );
   }
 }

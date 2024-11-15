@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
-import { Prisma, User } from '@prisma/client';
+import { Media, Prisma, User } from '@prisma/client';
 import { PrismaService } from '../shared/modules/prisma/prisma.service';
 import { GameCreateDto, GameDto, GameUpdateDto, PlayTimeDto } from './game.dto';
 import { MinioClientService } from '../shared/modules/minio-client/minio-client.service';
@@ -199,7 +199,11 @@ export class GameService {
     return deletedGame;
   }
 
-  async recordPlayTime(user: User, gameId: string, playTimeDto: PlayTimeDto) {
+  public async recordPlayTime(
+    user: User,
+    gameId: string,
+    playTimeDto: PlayTimeDto,
+  ) {
     this.logger.log(
       `Recording play time for user ID: ${user.id}, game ID: ${gameId}`,
     );
@@ -231,5 +235,54 @@ export class GameService {
       );
     }
     return existingRecord;
+  }
+
+  public async uploadGameImages(
+    gameId: string,
+    files: Express.Multer.File[],
+  ): Promise<Media[]> {
+    this.logger.log(`Uploading multiple images for game ID: ${gameId}`);
+
+    const game = await this.prisma.game.findUnique({
+      where: { id: gameId },
+      include: { creator: true },
+    });
+
+    if (!game) {
+      this.logger.warn(`Game with ID: ${gameId} not found`);
+      throw new HttpException('Game not found', HttpStatus.NOT_FOUND);
+    }
+
+    const gameTitle = game.title;
+
+    const uploadedFiles = await this.minioClientService.uploadMultipleMedia(
+      files,
+      gameTitle,
+      true,
+    );
+    console.log('uploadedFiles', uploadedFiles);
+
+    const mediaData = uploadedFiles.map((file) => ({
+      filename: `${process.env.MINIO_URL}/${process.env.MINIO_BUCKET}/${file.filename}`,
+      mimetype:
+        files.find((f) => f.path === file.filename)?.mimetype || 'image/png',
+      name: path.basename(file.filename),
+      size: files.find((f) => f.path === file.filename)?.size || 0,
+      thumbnailFileName: file.thumbnailFileName
+        ? `${process.env.MINIO_URL}/${process.env.MINIO_BUCKET}/${file.thumbnailFileName}`
+        : null,
+      userId: game.creatorId,
+      gameId: gameId,
+    }));
+
+    const createdMedia = await Promise.all(
+      mediaData.map((data) => this.prisma.media.create({ data })),
+    );
+
+    this.logger.log(
+      `Uploaded and stored ${createdMedia.length} images for game ID: ${gameId}`,
+    );
+
+    return createdMedia;
   }
 }

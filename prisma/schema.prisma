@@ -46,10 +46,14 @@ model Media {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  userId String
-  user   User   @relation("UserMedia", fields: [userId], references: [id], onDelete: Cascade)
+  userId String?
+  user   User?   @relation("UserMedia", fields: [userId], references: [id], onDelete: Cascade)
+
+  gameId String?
+  game   Game?  @relation("GameMedia", fields: [gameId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([gameId])
 }
 
 model Comment {
@@ -89,22 +93,11 @@ model Game {
   comments Comment[]  @relation("GameComment")
   likedBy  Like[]
 
-  objects       ObjectsGame[]      @relation("GameObjects")
+  media          Media[]            @relation("GameMedia")
   winConditions WinConditionGame[] @relation("GameWinCondition")
   PlayHistory   PlayHistory[]
 
   @@index([creatorId])
-}
-
-model ObjectsGame {
-  id        String   @id @default(uuid())
-  url       String
-  gameId    String
-  game      Game     @relation("GameObjects", fields: [gameId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([gameId])
 }
 
 model WinConditionGame {
@@ -113,7 +106,7 @@ model WinConditionGame {
   gameId    String
   game      Game     @relation("GameWinCondition", fields: [gameId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now())
 
   @@index([gameId])
 }
