@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Media } from '@prisma/client';
 import {
   IsArray,
+  IsBoolean,
   IsInt,
   IsNotEmpty,
   IsObject,
@@ -90,6 +91,15 @@ export class GameDto {
   })
   @IsString()
   updatedAt: string;
+
+  @ApiProperty({
+    type: 'boolean',
+    required: false,
+    description: 'Is the game liked by the user',
+  })
+  @IsOptional()
+  @IsBoolean()
+  isLiked?: boolean;
 }
 
 export class PlayHistoryDto {

@@ -57,8 +57,13 @@ export class GameController {
   async findAll(
     @Query('page') page: number = 1,
     @Query('perPage') perPage: number = 10,
+    @Req() req: Request,
   ) {
-    const games = await this.gameService.getAllGames(page, perPage);
+    const games = await this.gameService.getAllGames(
+      page,
+      perPage,
+      req.user as User,
+    );
     return responseRequest<PaginatedOutputDto<GameDto>>(
       'success',
       'Game found',
@@ -72,8 +77,9 @@ export class GameController {
   @ApiOperation({ summary: 'Get game', description: 'Get a game by id' })
   public async getGame(
     @Param('id') id: string,
+    @Req() req: Request,
   ): Promise<ResponseRequest<Partial<Game>>> {
-    const game = await this.gameService.getGame(id);
+    const game = await this.gameService.getGame(id, req.user as User);
     return responseRequest<Partial<Game>>('success', 'Game found', game);
   }
 

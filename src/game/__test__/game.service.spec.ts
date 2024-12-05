@@ -1,24 +1,49 @@
+jest.mock('@prisma/client', () => {
+  const PrismaClientMock = jest.fn(() => ({
+    game: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      count: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    },
+    playHistory: {
+      findFirst: jest.fn(),
+      update: jest.fn(),
+      create: jest.fn(),
+    },
+    media: {
+      create: jest.fn(),
+    },
+  }));
+  return { PrismaClient: PrismaClientMock };
+});
 import { Test, TestingModule } from '@nestjs/testing';
 import { GameService } from '../game.service';
 import { PrismaService } from '../../shared/modules/prisma/prisma.service';
 import { MinioClientService } from '../../shared/modules/minio-client/minio-client.service';
-import { GameCreateDto, GameUpdateDto } from '../game.dto';
+import { GameCreateDto, GameUpdateDto, PlayTimeDto } from '../game.dto';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { User } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
 import { tmpdir } from 'os';
-import { Readable } from 'stream';
-import { Prisma } from '@prisma/client';
+import { createPaginator } from 'prisma-pagination';
+import { LikeService } from '../../like/like.service';
 
 jest.mock('fs');
 jest.mock('path');
 jest.mock('os');
+jest.mock('prisma-pagination', () => ({
+  createPaginator: jest.fn(() => jest.fn()),
+}));
 
 describe('GameService', () => {
   let service: GameService;
   let prismaService: PrismaService;
   let minioClientService: MinioClientService;
+  let likeService: LikeService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -35,6 +60,14 @@ describe('GameService', () => {
               update: jest.fn(),
               delete: jest.fn(),
             },
+            playHistory: {
+              findFirst: jest.fn(),
+              update: jest.fn(),
+              create: jest.fn(),
+            },
+            media: {
+              create: jest.fn(),
+            },
           },
         },
         {
@@ -44,6 +77,13 @@ describe('GameService', () => {
             uploadJsonFile: jest.fn(),
             updateJsonFile: jest.fn(),
             deleteFolder: jest.fn(),
+            uploadMultipleMedia: jest.fn(),
+          },
+        },
+        {
+          provide: LikeService,
+          useValue: {
+            hasLikedGame: jest.fn(),
           },
         },
       ],
@@ -52,6 +92,7 @@ describe('GameService', () => {
     service = module.get<GameService>(GameService);
     prismaService = module.get<PrismaService>(PrismaService);
     minioClientService = module.get<MinioClientService>(MinioClientService);
+    likeService = module.get<LikeService>(LikeService);
 
     jest.clearAllMocks();
 
@@ -67,26 +108,41 @@ describe('GameService', () => {
   });
 
   describe('getAllGames', () => {
-    it('should return a list of games', async () => {
-      const mockGames = [{ id: '1', title: 'Test Game' }];
-      prismaService.game.findMany = jest.fn().mockResolvedValue(mockGames);
-      prismaService.game.count = jest.fn().mockResolvedValue(1);
+    it('should return a list of games with hasLiked property', async () => {
+      const mockGamesData = [
+        { id: '1', title: 'Test Game 1' },
+        { id: '2', title: 'Test Game 2' },
+      ];
+      const mockPaginate = jest.fn().mockResolvedValue({
+        data: mockGamesData,
+        meta: {},
+      });
+      (createPaginator as jest.Mock).mockReturnValue(mockPaginate);
+      (likeService.hasLikedGame as jest.Mock)
+        .mockResolvedValueOnce(true)
+        .mockResolvedValueOnce(false);
 
-      const result = await service.getAllGames(1, 10);
+      const user: User = { id: 'user1' } as User;
 
-      expect(prismaService.game.findMany).toHaveBeenCalled();
-      expect(prismaService.game.count).toHaveBeenCalled();
+      const result = await service.getAllGames(1, 10, user);
+
+      expect(mockPaginate).toHaveBeenCalled();
       expect(result).toBeDefined();
-      expect(result.data).toEqual(mockGames);
+      expect(result.data).toHaveLength(2);
+      expect(result.data[0]).toHaveProperty('hasLiked', true);
+      expect(result.data[1]).toHaveProperty('hasLiked', false);
     });
   });
 
   describe('getGame', () => {
-    it('should return a game by id', async () => {
+    it('should return a game by id with hasLiked property', async () => {
       const mockGame = { id: '1', title: 'Test Game' };
       prismaService.game.findUnique = jest.fn().mockResolvedValue(mockGame);
+      (likeService.hasLikedGame as jest.Mock).mockResolvedValue(true);
 
-      const result = await service.getGame('1');
+      const user: User = { id: 'user1' } as User;
+
+      const result = await service.getGame('1', user);
 
       expect(prismaService.game.findUnique).toHaveBeenCalledWith({
         where: { id: '1' },
@@ -99,15 +155,7 @@ describe('GameService', () => {
           creator: true,
         },
       });
-      expect(result).toEqual(mockGame);
-    });
-
-    it('should return null if game not found', async () => {
-      prismaService.game.findUnique = jest.fn().mockResolvedValue(null);
-
-      const result = await service.getGame('1');
-
-      expect(result).toBeNull();
+      expect(result).toEqual({ ...mockGame, hasLiked: true });
     });
   });
 
@@ -200,7 +248,9 @@ describe('GameService', () => {
         title: 'Updated Game',
       };
 
-      service.getGame = jest.fn().mockResolvedValue(null);
+      service.getGame = jest.fn().mockImplementation(() => {
+        throw new HttpException('Game not found', HttpStatus.NOT_FOUND);
+      });
 
       await expect(service.updateGame(gameId, gameUpdateDto)).rejects.toThrow(
         new HttpException('Game not found', HttpStatus.NOT_FOUND),
@@ -235,9 +285,94 @@ describe('GameService', () => {
     it('should throw an error if game not found', async () => {
       const gameId = 'game1';
 
-      service.getGame = jest.fn().mockResolvedValue(null);
+      service.getGame = jest.fn().mockImplementation(() => {
+        throw new HttpException('Game not found', HttpStatus.NOT_FOUND);
+      });
 
       await expect(service.deleteGame(gameId)).rejects.toThrow(
+        new HttpException('Game not found', HttpStatus.NOT_FOUND),
+      );
+    });
+  });
+
+  describe('recordPlayTime', () => {
+    it('should create play time record if not exists', async () => {
+      const user: User = { id: 'user1' } as User;
+      const gameId = 'game1';
+      const playTimeDto: PlayTimeDto = { playTime: 120 };
+
+      prismaService.playHistory.findFirst = jest.fn().mockResolvedValue(null);
+      prismaService.playHistory.create = jest.fn();
+
+      const result = await service.recordPlayTime(user, gameId, playTimeDto);
+
+      expect(prismaService.playHistory.findFirst).toHaveBeenCalledWith({
+        where: { userId: user.id, gameId },
+      });
+      expect(prismaService.playHistory.create).toHaveBeenCalledWith({
+        data: {
+          userId: user.id,
+          gameId,
+          playTime: playTimeDto.playTime,
+        },
+      });
+      expect(result).toEqual(null);
+    });
+  });
+
+  describe('uploadGameImages', () => {
+    it('should upload images and store media records', async () => {
+      const gameId = 'game1';
+      const files = [
+        {
+          path: 'image1.png',
+          mimetype: 'image/png',
+          size: 1234,
+        } as Express.Multer.File,
+        {
+          path: 'image2.jpg',
+          mimetype: 'image/jpeg',
+          size: 2345,
+        } as Express.Multer.File,
+      ];
+
+      const game = {
+        id: gameId,
+        title: 'Test Game',
+        creatorId: 'user1',
+      };
+
+      prismaService.game.findUnique = jest.fn().mockResolvedValue(game);
+      minioClientService.uploadMultipleMedia = jest
+        .fn()
+        .mockResolvedValue([
+          { filename: 'image1.png' },
+          { filename: 'image2.jpg' },
+        ]);
+      prismaService.media.create = jest.fn().mockResolvedValue({});
+
+      const result = await service.uploadGameImages(gameId, files);
+
+      expect(prismaService.game.findUnique).toHaveBeenCalledWith({
+        where: { id: gameId },
+        include: { creator: true },
+      });
+      expect(minioClientService.uploadMultipleMedia).toHaveBeenCalledWith(
+        files,
+        game.title,
+        true,
+      );
+      expect(prismaService.media.create).toHaveBeenCalledTimes(2);
+      expect(result).toHaveLength(2);
+    });
+
+    it('should throw an error if game not found', async () => {
+      const gameId = 'game1';
+      const files = [];
+
+      prismaService.game.findUnique = jest.fn().mockResolvedValue(null);
+
+      await expect(service.uploadGameImages(gameId, files)).rejects.toThrow(
         new HttpException('Game not found', HttpStatus.NOT_FOUND),
       );
     });

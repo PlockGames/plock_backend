@@ -8,6 +8,7 @@ import { tmpdir } from 'os';
 import { Readable } from 'stream';
 import * as path from 'path';
 import { createPaginator } from 'prisma-pagination';
+import { LikeService } from '../like/like.service';
 
 @Injectable()
 export class GameService {
@@ -16,9 +17,10 @@ export class GameService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly minioClientService: MinioClientService,
+    private readonly likeService: LikeService,
   ) {}
 
-  public async getAllGames(page: number, perPage: number) {
+  public async getAllGames(page: number, perPage: number, user?: User) {
     this.logger.log(
       `Retrieving all games - Page: ${page}, PerPage: ${perPage}`,
     );
@@ -45,11 +47,27 @@ export class GameService {
       },
     );
 
-    this.logger.log(`Retrieved ${games.data.length} games`);
-    return games;
+    // Añade la propiedad hasLiked a cada juego
+    const gamesWithHasLiked = await Promise.all(
+      games.data.map(async (game) => {
+        const hasLiked = await this.likeService.hasLikedGame(user.id, game.id);
+        return {
+          ...game,
+          hasLiked,
+        };
+      }),
+    );
+
+    this.logger.log(
+      `Retrieved ${gamesWithHasLiked.length} games with like status`,
+    );
+    return {
+      ...games,
+      data: gamesWithHasLiked,
+    };
   }
 
-  public async getGame(id: string) {
+  public async getGame(id: string, user?: User) {
     this.logger.log(`Retrieving game with ID: ${id}`);
     const game = await this.prisma.game.findUnique({
       where: { id },
@@ -67,7 +85,11 @@ export class GameService {
     } else {
       this.logger.log(`Game retrieved: ${JSON.stringify(game)}`);
     }
-    return game;
+
+    return {
+      ...game,
+      hasLiked: await this.likeService.hasLikedGame(user.id, id),
+    };
   }
 
   public async createGame(user: User, game: GameCreateDto) {
