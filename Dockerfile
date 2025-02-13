@@ -10,7 +10,7 @@ COPY . .
 RUN yarn install
 
 # Run Prisma Migrate and Seed
-RUN yarn prisma migrate deploy && yarn prisma:seed
+RUN yarn prisma migrate deploy
 
 #Launch test
 RUN yarn build
