@@ -9,6 +9,9 @@ COPY . .
 #Install of all dependencies
 RUN yarn install
 
+# Run Prisma Migrate and Seed
+RUN yarn prisma migrate deploy && yarn prisma:seed
+
 #Launch test
 RUN yarn build
 
@@ -24,4 +27,4 @@ USER nest:nest
 EXPOSE 80
 
 #Launch the app
-CMD ["sh", "-c", "npx prisma migrate deploy && yarn start:prod"]
+CMD ["sh", "-c", "yarn start:prod"]

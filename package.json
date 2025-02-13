@@ -52,6 +52,7 @@
   },
   "devDependencies": {
     "@compodoc/compodoc": "^1.1.25",
+    "@faker-js/faker": "^9.5.0",
     "@nestjs/cli": "^10.0.0",
     "@nestjs/schematics": "^10.0.0",
     "@nestjs/testing": "^10.0.0",
@@ -78,6 +79,9 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.4.5"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   },
   "jest": {
     "moduleFileExtensions": [
