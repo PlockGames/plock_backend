@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class AuthResponseDto {
   @ApiProperty({
@@ -59,6 +59,13 @@ export class AuthParitalSignupDto extends AuthLoginDto {
   @IsString({ message: 'Birth date must be a string' })
   @IsNotEmpty({ message: 'Birth date must not be empty' })
   birthDate: string;
+  @ApiProperty({
+    type: 'string',
+    required: false,
+  })
+  @IsString({ message: 'Phone number must be a string' })
+  @IsOptional()
+  phoneNumber?: string;
 }
 
 export class AuthCompleteSignUpDto {

@@ -117,6 +117,7 @@ describe('UserService', () => {
         email: 'test@example.com',
         username: 'testuser',
         password: 'password',
+        birthDate: '1990-01-01',
       };
 
       // Mock the bcrypt.hash function to return a specific hash value
@@ -134,6 +135,7 @@ describe('UserService', () => {
           email: authPartialSignupDto.email,
           password: hashedPassword, // Use the mocked hashed password
           username: authPartialSignupDto.username,
+          birthDate: authPartialSignupDto.birthDate,
         },
       });
     });
@@ -143,6 +145,7 @@ describe('UserService', () => {
         email: 'test@example.com',
         username: 'testuser',
         password: 'password',
+        birthDate: '1990-01-01',
       };
       const error = new PrismaClientKnownRequestError('Error message', {
         code: 'P2002',
