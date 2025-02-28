@@ -76,7 +76,7 @@ jobs:
       - name: Install SSH client
         run: sudo apt-get install -y openssh-client
 
-      - name: SSH into Droplet, pull image, and run container
+      - name: SSH into VM, pull image, and run container
         uses: appleboy/ssh-action@master
         with:
           host: ${{ env.VM_SSH_HOST }}
@@ -91,10 +91,10 @@ jobs:
                 docker rm server-${{ github.ref_name }}
             fi
             if [ "${{ github.ref_name }}" = "main" ]; then
-            sudo docker run -d --name server-${{ github.ref_name }} -p 3000:3000 --env-file /config-plock/env/.env.${{ github.ref_name }} soymustael/plock-back:${{ github.ref_name }}
+              sudo docker run -d --name server-${{ github.ref_name }} -p 3000:3000 --env-file /opt/app/.env.${{ github.ref_name }} soymustael/plock-back:${{ github.ref_name }}
             elif [ "${{ github.ref_name }}" = "develop" ]; then
-            sudo docker run -d --name server-${{ github.ref_name }} -p 4000:4000 --env-file /config-plock/env/.env.${{ github.ref_name }} soymustael/plock-back:${{ github.ref_name }}
+              sudo docker run -d --name server-${{ github.ref_name }} -p 4000:4000 --env-file /opt/app/.env.${{ github.ref_name }} soymustael/plock-back:${{ github.ref_name }}
             else
-            echo "Unsupported branch: ${{ github.ref_name }}"
-            exit 1
+              echo "Unsupported branch: ${{ github.ref_name }}"
+              exit 1
             fi

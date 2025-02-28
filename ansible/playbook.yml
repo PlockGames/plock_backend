@@ -1,0 +1,116 @@
+- name: Desplegar servicios con Docker Compose y archivo .env generado
+  hosts: all
+  become: yes
+  vars:
+    app_path: /opt/app
+    branch: 'develop' # Valor por defecto; se puede sobreescribir con --extra-vars "branch=main"
+    env_vars_develop: {}
+    env_vars_main: {}
+  tasks:
+    - name: Actualizar repositorios
+      apt:
+        update_cache: yes
+
+    - name: Instalar Docker
+      apt:
+        name: docker.io
+        state: present
+
+    - name: Instalar Docker Compose
+      apt:
+        name: docker-compose
+        state: present
+
+    - name: Crear directorio de la aplicación
+      file:
+        path: '{{ app_path }}'
+        state: directory
+        mode: '0755'
+
+    - name: Crear red Docker si no existe
+      shell: docker network create nest-net || true
+      changed_when: false
+
+    - name: Copiar archivos docker-compose
+      copy:
+        src: '../docker/{{ item }}'
+        dest: '{{ app_path }}/{{ item }}'
+        mode: '0644'
+      with_items:
+        - docker-compose.develop.yml
+        - docker-compose.main.yml
+        - docker-compose.minio.yml
+
+    - name: Copiar archivos .env.develop y .env.main a la VM
+      copy:
+        src: '../{{ item }}'
+        dest: '{{ app_path }}/{{ item }}'
+        mode: '0644'
+      with_items:
+        - .env.develop
+        - .env.main
+
+    - name: Leer archivo .env.develop
+      shell: cat "{{ app_path }}/.env.develop"
+      register: env_develop_content
+      changed_when: false
+
+    - name: Leer archivo .env.main
+      shell: cat "{{ app_path }}/.env.main"
+      register: env_main_content
+      changed_when: false
+
+    - name: Parsear variables del archivo .env.develop
+      set_fact:
+        env_vars_develop: "{{ env_vars_develop | combine({item.split('=')[0]: item.split('=')[1]}) }}"
+      loop: "{{ env_develop_content.stdout_lines | select('match', '^[A-Za-z]') | list }}"
+      when: item.split('=')[1] is defined
+
+    - name: Parsear variables del archivo .env.main
+      set_fact:
+        env_vars_main: "{{ env_vars_main | combine({item.split('=')[0]: item.split('=')[1]}) }}"
+      loop: "{{ env_main_content.stdout_lines | select('match', '^[A-Za-z]') | list }}"
+      when: item.split('=')[1] is defined
+
+    - name: Generar archivo .env a partir de la plantilla
+      template:
+        src: templates/env.j2
+        dest: '{{ app_path }}/.env'
+        mode: '0644'
+
+    # Verificar y desplegar MinIO si no está corriendo
+    - name: Verificar si MinIO está corriendo
+      shell: docker ps -q -f name=minio
+      register: minio_running
+      changed_when: false
+
+    - name: Desplegar MinIO si no está corriendo
+      shell: cd {{ app_path }} && docker-compose -f docker-compose.minio.yml up -d
+      when: minio_running.stdout == ''
+
+    # Desplegar contenedores según el entorno sin detener otros contenedores
+    - name: Desplegar contenedores de {{ branch }}
+      shell: cd {{ app_path }} && docker-compose -f docker-compose.{{ branch }}.yml up -d
+      register: deploy_output
+
+    - debug:
+        var: deploy_output.stdout_lines
+      ignore_errors: yes
+
+    # Limpiar contenedores e imágenes huérfanas
+    - name: Limpiar recursos Docker huérfanos
+      shell: |
+        docker system prune -f
+      ignore_errors: yes
+
+    - name: Levantar contenedores según el entorno
+      shell: |
+        cd {{ app_path }}
+        if [ "{{ branch }}" = "develop" ]; then
+          docker-compose -f docker-compose.develop.yml up -d
+        elif [ "{{ branch }}" = "main" ]; then
+          docker-compose -f docker-compose.main.yml up -d
+        else
+          echo "Entorno desconocido: {{ branch }}"
+          exit 1
+        fi
