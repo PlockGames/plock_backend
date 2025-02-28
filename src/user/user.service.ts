@@ -105,6 +105,7 @@ export class UserService {
           email: authParitalSignupDto.email,
           password: hash,
           username: authParitalSignupDto.username,
+          birthDate: authParitalSignupDto.birthDate,
         },
       });
     } catch (err) {

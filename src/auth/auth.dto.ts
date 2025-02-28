@@ -48,6 +48,17 @@ export class AuthParitalSignupDto extends AuthLoginDto {
   @IsNotEmpty({ message: 'Username name is required' })
   @IsString()
   username: string;
+  @ApiProperty({
+    type: 'string',
+    required: true,
+  })
+  @ApiProperty({
+    type: 'string',
+    required: true,
+  })
+  @IsString({ message: 'Birth date must be a string' })
+  @IsNotEmpty({ message: 'Birth date must not be empty' })
+  birthDate: string;
 }
 
 export class AuthCompleteSignUpDto {
