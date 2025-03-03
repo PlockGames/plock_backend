@@ -29,7 +29,7 @@ export class GameOwnerInterceptor implements NestInterceptor {
       `Checking ownership for game ID: ${gameId} by user ID: ${user.id}`,
     );
 
-    const game = await this.gameService.getGame(gameId);
+    const game = await this.gameService.getGame(gameId, user);
 
     if (!game) {
       this.logger.warn(`Game not found: ID ${gameId}`);
