@@ -86,6 +86,8 @@ export class GameService {
       this.logger.log(`Game retrieved: ${JSON.stringify(game)}`);
     }
 
+    this.logger.log(`Checking if user has liked game ID: ${id}`);
+    this.logger.log(`User: ${JSON.stringify(user)}`);
     return {
       ...game,
       hasLiked: await this.likeService.hasLikedGame(user.id, id),
@@ -154,6 +156,7 @@ export class GameService {
   public async updateGame(id: string, data: GameUpdateDto) {
     this.logger.log(`Updating game ID: ${id}`);
     const game = await this.getGame(id);
+    this.logger.log(`Game found for update ID: ${id}`);
     if (!game) {
       this.logger.warn(`Game not found for update ID: ${id}`);
       throw new HttpException('Game not found', HttpStatus.NOT_FOUND);
