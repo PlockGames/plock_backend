@@ -86,11 +86,9 @@ export class GameService {
       this.logger.log(`Game retrieved: ${JSON.stringify(game)}`);
     }
 
-    this.logger.log(`Checking if user has liked game ID: ${id}`);
-    this.logger.log(`User: ${JSON.stringify(user)}`);
     return {
       ...game,
-      hasLiked: await this.likeService.hasLikedGame(user.id, id),
+      hasLiked: user ? await this.likeService.hasLikedGame(user.id, id): false,
     };
   }
 
