@@ -193,6 +193,9 @@ export class GameService {
     }
 
     delete data.contentGame;
+    if (data.tags) {
+      delete data.tags;
+    }
 
     const updatedGame = await this.prisma.game.update({
       where: { id },
