@@ -243,3 +243,18 @@ export class GameController {
     );
   }
 }
+
+// get images from a game
+@Get(':id/images')
+@ApiBearerAuth('JWT-auth')
+@ResponseManySchema(MediaDto)
+@ApiOperation({
+  summary: 'Get images',
+  description: 'Get images for a game',
+})
+public async getImages(
+  @Param('id') gameId: string,
+): Promise<ResponseRequest<Media[]>> {
+  const images = await this.gameService.getGameImages(gameId);
+  return responseRequest<Media[]>('success', 'Images found', images);
+}

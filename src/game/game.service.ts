@@ -311,4 +311,25 @@ export class GameService {
 
     return createdMedia;
   }
+
+  public async getGameImages(gameId: string): Promise<Media[]> {
+    this.logger.log(`Retrieving images for game ID: ${gameId}`);
+
+    const game = await this.prisma.game.findUnique({
+      where: { id: gameId },
+    });
+
+    if (!game) {
+      this.logger.warn(`Game with ID: ${gameId} not found`);
+      throw new HttpException('Game not found', HttpStatus.NOT_FOUND);
+    }
+
+    const media = await this.prisma.media.findMany({
+      where: { gameId },
+    });
+
+    this.logger.log(`Retrieved ${media.length} images for game ID: ${gameId}`);
+    return media;
+  }
 }
+
