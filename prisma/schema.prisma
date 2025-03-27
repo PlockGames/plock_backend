@@ -50,7 +50,7 @@ model Media {
   user   User?   @relation("UserMedia", fields: [userId], references: [id], onDelete: Cascade)
 
   gameId String?
-  game   Game?  @relation("GameMedia", fields: [gameId], references: [id], onDelete: Cascade)
+  game   Game?   @relation("GameMedia", fields: [gameId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([gameId])
@@ -93,7 +93,7 @@ model Game {
   comments Comment[]  @relation("GameComment")
   likedBy  Like[]
 
-  media          Media[]            @relation("GameMedia")
+  media         Media[]            @relation("GameMedia")
   winConditions WinConditionGame[] @relation("GameWinCondition")
   PlayHistory   PlayHistory[]
 

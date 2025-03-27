@@ -77,7 +77,8 @@ export class LikeService {
     return count;
   }
 
-  async hasLikedGame(userId: string, gameId: string): Promise<boolean> {
+  async hasLikedGame(gameId: string, userId?: string): Promise<boolean> {
+    if (!userId) return false;
     const like = await this.prisma.like.findUnique({
       where: {
         userId_gameId: { userId, gameId },
