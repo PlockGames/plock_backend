@@ -261,6 +261,7 @@ describe('GameService', () => {
   describe('deleteGame', () => {
     it('should delete a game', async () => {
       const gameId = 'game1';
+      const user: User = { id: 'user1' } as User;
       const existingGame = {
         id: gameId,
         title: 'Game to Delete',
@@ -270,9 +271,9 @@ describe('GameService', () => {
       minioClientService.deleteFolder = jest.fn().mockResolvedValue(undefined);
       prismaService.game.delete = jest.fn().mockResolvedValue(existingGame);
 
-      const result = await service.deleteGame(gameId);
+      const result = await service.deleteGame(gameId, user);
 
-      expect(service.getGame).toHaveBeenCalledWith(gameId);
+      expect(service.getGame).toHaveBeenCalledWith(gameId, user);
       expect(minioClientService.deleteFolder).toHaveBeenCalledWith(
         `games/${existingGame.title}`,
       );
@@ -284,12 +285,13 @@ describe('GameService', () => {
 
     it('should throw an error if game not found', async () => {
       const gameId = 'game1';
+      const user: User = { id: 'user1' } as User;
 
       service.getGame = jest.fn().mockImplementation(() => {
         throw new HttpException('Game not found', HttpStatus.NOT_FOUND);
       });
 
-      await expect(service.deleteGame(gameId)).rejects.toThrow(
+      await expect(service.deleteGame(gameId, user)).rejects.toThrow(
         new HttpException('Game not found', HttpStatus.NOT_FOUND),
       );
     });
