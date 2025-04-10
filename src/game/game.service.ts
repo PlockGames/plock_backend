@@ -80,11 +80,8 @@ export class GameService {
         creator: true,
       },
     });
-    if (!game) {
-      this.logger.warn(`Game with ID: ${id} not found`);
-    } else {
-      this.logger.log(`Game retrieved: ${JSON.stringify(game)}`);
-    }
+    if (!game) this.logger.warn(`Game with ID: ${id} not found`);
+    this.logger.log(`Game retrieved: ${JSON.stringify(game)}`);
 
     return {
       ...game,
@@ -209,9 +206,9 @@ export class GameService {
     return updatedGame;
   }
 
-  public async deleteGame(id: string) {
+  public async deleteGame(id: string, user: User) {
     this.logger.log(`Deleting game ID: ${id}`);
-    const game = await this.getGame(id);
+    const game = await this.getGame(id, user);
     if (!game) {
       this.logger.warn(`Game not found for deletion ID: ${id}`);
       throw new HttpException('Game not found', HttpStatus.NOT_FOUND);

@@ -155,8 +155,9 @@ export class GameController {
   @ApiOperation({ summary: 'Delete game', description: 'Delete a game' })
   public async delete(
     @Param('id') id: string,
+    @Req() req: Request,
   ): Promise<ResponseRequest<Partial<Game>>> {
-    const gameDeleted = await this.gameService.deleteGame(id);
+    const gameDeleted = await this.gameService.deleteGame(id, req.user as User);
     return responseRequest<Partial<Game>>(
       'success',
       'Game deleted',
