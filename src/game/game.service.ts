@@ -83,7 +83,6 @@ export class GameService {
     if (!game) this.logger.warn(`Game with ID: ${id} not found`);
     this.logger.log(`Game retrieved: ${JSON.stringify(game)}`);
 
-    this.logger.log(`Checking if user ${user} has liked the game`);
     const hasLiked = await this.likeService.hasLikedGame(user?.id, id);
     this.logger.log(`User ${user?.id} has liked the game: ${hasLiked}`);
     return {
