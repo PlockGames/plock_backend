@@ -84,9 +84,6 @@ export class LikeService {
         userId_gameId: { userId, gameId },
       },
     });
-    this.logger.log(
-      `User ID: ${userId} has ${like ? 'liked' : 'not liked'} game ID: ${gameId}`,
-    );
     return !!like;
   }
 }
