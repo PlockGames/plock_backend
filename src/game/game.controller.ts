@@ -80,7 +80,6 @@ export class GameController {
     @Req() req: Request,
   ): Promise<ResponseRequest<Partial<Game>>> {
     const user = req.user as User;
-    console.log(user);
     const game = await this.gameService.getGame(id, user);
     return responseRequest<Partial<Game>>('success', 'Game found', game);
   }
