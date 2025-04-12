@@ -79,7 +79,9 @@ export class GameController {
     @Param('id') id: string,
     @Req() req: Request,
   ): Promise<ResponseRequest<Partial<Game>>> {
-    const game = await this.gameService.getGame(id, req.user as User);
+    const user = req.user as User;
+    console.log(user);
+    const game = await this.gameService.getGame(id, user);
     return responseRequest<Partial<Game>>('success', 'Game found', game);
   }
 
