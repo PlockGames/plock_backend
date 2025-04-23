@@ -14,7 +14,6 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { GameService } from './game.service';
-import { Game, Media, User } from '@prisma/client';
 import {
   GameCreateDto,
   GameDto,
@@ -71,19 +70,6 @@ export class GameController {
     );
   }
 
-  @Get(':id')
-  @ApiBearerAuth('JWT-auth')
-  @ResponseOneSchema(GameDto)
-  @ApiOperation({ summary: 'Get game', description: 'Get a game by id' })
-  public async getGame(
-    @Param('id') id: string,
-    @Req() req: Request,
-  ): Promise<ResponseRequest<Partial<Game>>> {
-    const user = req.user as User;
-    const game = await this.gameService.getGame(id, user);
-    return responseRequest<Partial<Game>>('success', 'Game found', game);
-  }
-
   @Get('recommendation')
   @ApiBearerAuth('JWT-auth')
   @ResponseManySchema(GameDto)
@@ -100,6 +86,40 @@ export class GameController {
       limit,
     );
     return responseRequest<Game[]>('success', 'Recommendations found', games);
+  }
+
+  @Get('my')
+  @ApiPaginatedResponse(GameDto)
+  @ApiBearerAuth('JWT-auth')
+  @ApiResponse({ status: 200 })
+  @ApiOperation({ summary: 'Get all games', description: 'Get all games' })
+  async findAllMyGames(
+    @Query('page') page: number = 1,
+    @Query('perPage') perPage: number = 10,
+    @Req() req: Request,
+  ) {
+    const games = await this.gameService.findAllMyGames(
+      page,
+      perPage,
+      req.user as User,
+    );
+    return responseRequest<PaginatedOutputDto<GameDto>>(
+      'success',
+      'Game found',
+      games,
+    );
+  }
+
+  @Get(':id')
+  @ApiBearerAuth('JWT-auth')
+  @ResponseOneSchema(GameDto)
+  @ApiOperation({ summary: 'Get game', description: 'Get a game by id' })
+  public async getGame(
+    @Param('id') id: string,
+    @Req() req: Request,
+  ): Promise<ResponseRequest<Partial<Game>>> {
+    const game = await this.gameService.getGame(id, req.user as User);
+    return responseRequest<Partial<Game>>('success', 'Game found', game);
   }
 
   @Post()

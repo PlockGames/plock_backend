@@ -67,6 +67,54 @@ export class GameService {
     };
   }
 
+  public async findAllMyGames(page: number, perPage: number, user: User) {
+    this.logger.log(
+      `Retrieving all games for user ID: ${user.id} - Page: ${page}, PerPage: ${perPage}`,
+    );
+    const paginate = createPaginator({ perPage });
+    const games = await paginate<GameDto, Prisma.GameFindManyArgs>(
+      this.prisma.game,
+      {
+        where: { creatorId: user.id },
+        include: {
+          Taggable: {
+            include: {
+              tag: true,
+            },
+          },
+          creator: true,
+        },
+        orderBy: {
+          id: 'desc',
+        },
+      },
+      {
+        page,
+      },
+    );
+    this.logger.log(
+      `Retrieved ${games.data.length} games for user ID: ${user.id}`,
+    );
+
+    // Añade la propiedad hasLiked a cada juego
+    const gamesWithHasLiked = await Promise.all(
+      games.data.map(async (game) => {
+        const hasLiked = await this.likeService.hasLikedGame(user.id, game.id);
+        return {
+          ...game,
+          hasLiked,
+        };
+      }),
+    );
+    this.logger.log(
+      `Retrieved ${gamesWithHasLiked.length} games with like status for user ID: ${user.id}`,
+    );
+    return {
+      ...games,
+      data: gamesWithHasLiked,
+    };
+  }
+
   public async getGame(id: string, user?: User) {
     this.logger.log(`Retrieving game with ID: ${id}`);
     const game = await this.prisma.game.findUnique({
