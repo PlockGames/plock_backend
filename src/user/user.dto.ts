@@ -182,3 +182,22 @@ export class UserUpdateDto {
   @IsOptional()
   password: string;
 }
+
+// --- DTO for OAuth User Creation ---
+export class UserOAuthCreateDto {
+  @ApiProperty({ type: 'string', required: true })
+  @IsEmail({}, { message: "The email isn't valid" })
+  email: string;
+
+  @ApiProperty({ type: 'string', required: false })
+  @IsOptional()
+  firstName?: string;
+
+  @ApiProperty({ type: 'string', required: false })
+  @IsOptional()
+  lastName?: string;
+
+  @ApiProperty({ type: 'string', required: false })
+  @IsOptional()
+  pofilePic?: string;
+}

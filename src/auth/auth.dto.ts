@@ -108,3 +108,15 @@ export class AuthRefreshTokenDto {
   @IsNotEmpty({ message: 'Refresh token must not be empty' })
   refreshToken: string;
 }
+
+// --- DTO for Google ID Token Verification (Mobile) ---
+export class AuthGoogleIdTokenDto {
+  @ApiProperty({
+    type: 'string',
+    required: true,
+    description: 'Google ID Token obtained from mobile app',
+  })
+  @IsString()
+  @IsNotEmpty({ message: 'The Google ID token is required' })
+  idToken: string;
+}
