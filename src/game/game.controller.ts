@@ -40,6 +40,7 @@ import { RecommendationService } from '../recommendation/recommendation.service'
 import { ResponseManySchema } from '../shared/decorators/response-many.decorator';
 import { memoryStorage } from 'multer';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { LikeService } from '../like/like.service';
 
 @ApiTags('Games')
 @Controller('game')
@@ -47,6 +48,7 @@ export class GameController {
   constructor(
     private readonly gameService: GameService,
     private readonly recommendationService: RecommendationService,
+    private readonly likeService: LikeService,
   ) {}
 
   @Get()
@@ -64,10 +66,33 @@ export class GameController {
       perPage,
       req.user as User,
     );
+
+    // Add hasLiked property and commentsCount to each game
+    const gamesWithExtraInfo = {
+      ...games,
+      data: await Promise.all(
+        games.data.map(async (game) => {
+          const hasLiked = await this.likeService.hasLikedGame(
+            game.id,
+            (req.user as User).id,
+          );
+
+          // Get comment count for this game using the game service
+          const commentsCount = await this.gameService.getCommentCount(game.id);
+
+          return {
+            ...game,
+            hasLiked,
+            commentsCount,
+          };
+        }),
+      ),
+    };
+
     return responseRequest<PaginatedOutputDto<GameDto>>(
       'success',
       'Game found',
-      games,
+      gamesWithExtraInfo,
     );
   }
 
@@ -86,7 +111,31 @@ export class GameController {
       req.user as User,
       limit,
     );
-    return responseRequest<Game[]>('success', 'Recommendations found', games);
+
+    // Add hasLiked property and commentsCount to each game
+    const gamesWithExtraInfo = await Promise.all(
+      games.map(async (game) => {
+        const hasLiked = await this.likeService.hasLikedGame(
+          game.id,
+          (req.user as User).id,
+        );
+
+        // Get comment count for this game using the game service
+        const commentsCount = await this.gameService.getCommentCount(game.id);
+
+        return {
+          ...game,
+          hasLiked,
+          commentsCount,
+        };
+      }),
+    );
+
+    return responseRequest<Game[]>(
+      'success',
+      'Recommendations found',
+      gamesWithExtraInfo,
+    );
   }
 
   @Get('my')
@@ -104,10 +153,33 @@ export class GameController {
       perPage,
       req.user as User,
     );
+
+    // Add hasLiked property and commentsCount to each game
+    const gamesWithExtraInfo = {
+      ...games,
+      data: await Promise.all(
+        games.data.map(async (game) => {
+          const hasLiked = await this.likeService.hasLikedGame(
+            game.id,
+            (req.user as User).id,
+          );
+
+          // Get comment count for this game using the game service
+          const commentsCount = await this.gameService.getCommentCount(game.id);
+
+          return {
+            ...game,
+            hasLiked,
+            commentsCount,
+          };
+        }),
+      ),
+    };
+
     return responseRequest<PaginatedOutputDto<GameDto>>(
       'success',
       'Game found',
-      games,
+      gamesWithExtraInfo,
     );
   }
 
@@ -120,7 +192,23 @@ export class GameController {
     @Req() req: Request,
   ): Promise<ResponseRequest<Partial<Game>>> {
     const game = await this.gameService.getGame(id, req.user as User);
-    return responseRequest<Partial<Game>>('success', 'Game found', game);
+
+    const commentsCount = await this.gameService.getCommentCount(game.id);
+    const hasLiked = await this.likeService.hasLikedGame(
+      game.id,
+      (req.user as User).id,
+    );
+    const gameWithExtraInfo = {
+      ...game,
+      hasLiked,
+      commentsCount,
+    };
+
+    return responseRequest<Partial<Game>>(
+      'success',
+      'Game found',
+      gameWithExtraInfo,
+    );
   }
 
   @Post()

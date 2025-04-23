@@ -352,4 +352,13 @@ export class GameService {
 
     return createdMedia;
   }
+
+  public async getCommentCount(gameId: string): Promise<number> {
+    this.logger.log(`Getting comment count for game ID: ${gameId}`);
+    const count = await this.prisma.comment.count({
+      where: { gameId },
+    });
+    this.logger.log(`Found ${count} comments for game ID: ${gameId}`);
+    return count;
+  }
 }
