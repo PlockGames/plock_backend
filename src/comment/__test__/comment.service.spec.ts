@@ -61,6 +61,16 @@ describe('CommentService', () => {
         },
         skip: 0,
         take: 10,
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
+              pofilePic: true,
+            },
+          },
+        },
       });
       expect(prismaService.comment.count).toHaveBeenCalledWith({
         where: {
