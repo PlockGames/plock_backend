@@ -1,23 +1,35 @@
-import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import {
   AuthCompleteSignUpDto,
+  AuthGoogleIdTokenDto,
   AuthLoginDto,
   AuthParitalSignupDto,
 } from './auth.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { OAuth2Client } from 'google-auth-library';
 import { UserService } from '../user/user.service';
 import { User } from '@prisma/client';
 import { Tokens } from '../shared/interfaces/auth';
+import { UserOAuthCreateDto } from '../user/user.dto';
 
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
+  private googleClient: OAuth2Client;
+
   constructor(
     private jwtService: JwtService,
     private userService: UserService,
-  ) {}
+  ) {
+    this.googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+  }
 
   async login(authLoginDto: AuthLoginDto): Promise<Tokens> {
     this.logger.log(`Login attempt for email: ${authLoginDto.email}`);
@@ -126,5 +138,74 @@ export class AuthService {
     const accessToken = await this.creationAccessToken(user as User);
     this.logger.log(`Access token renewed for user: ${user.id}`);
     return { accessToken };
+  }
+
+  // --- Method to handle Google Login/Signup ---
+  async handleGoogleLogin(googleUser: {
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    picture?: string;
+  }): Promise<Tokens> {
+    this.logger.log(`Handling Google login for email: ${googleUser.email}`);
+    let user = await this.userService.findByEmail(googleUser.email);
+
+    if (!user) {
+      this.logger.log(
+        `User not found for email ${googleUser.email}, creating new OAuth user.`,
+      );
+      const oauthDto: UserOAuthCreateDto = {
+        email: googleUser.email,
+        firstName: googleUser.firstName,
+        lastName: googleUser.lastName,
+        pofilePic: googleUser.picture,
+      };
+      user = await this.userService.createOAuthUser(oauthDto);
+      this.logger.log(`New OAuth user created: ${user.id}`);
+    } else {
+      this.logger.log(`Existing user found for Google login: ${user.id}`);
+    }
+
+    const accessToken = await this.creationAccessToken(user);
+    const refreshToken = await this.createRefreshToken(user);
+
+    await this.userService.setRefreshToken(user.id, refreshToken);
+    await this.userService.updateLastLogin(user.id);
+
+    this.logger.log(`Tokens generated for Google user: ${user.id}`);
+    return { accessToken, refreshToken };
+  }
+
+  // --- Method to verify Google ID Token and Login/Signup (for Mobile) ---
+  async verifyGoogleIdTokenAndLogin(
+    googleIdTokenDto: AuthGoogleIdTokenDto,
+  ): Promise<Tokens> {
+    this.logger.log('Verifying Google ID token from mobile app');
+    try {
+      const ticket = await this.googleClient.verifyIdToken({
+        idToken: googleIdTokenDto.idToken,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      const payload = ticket.getPayload();
+
+      if (!payload || !payload.email) {
+        this.logger.error('Invalid Google ID token payload received');
+        throw new UnauthorizedException('Invalid Google token');
+      }
+
+      this.logger.log(`Google ID token verified for email: ${payload.email}`);
+
+      const googleUser = {
+        email: payload.email,
+        firstName: payload.given_name,
+        lastName: payload.family_name,
+        picture: payload.picture,
+      };
+
+      return this.handleGoogleLogin(googleUser);
+    } catch (error) {
+      this.logger.error('Google ID token verification failed:', error);
+      throw new UnauthorizedException('Google authentication failed');
+    }
   }
 }

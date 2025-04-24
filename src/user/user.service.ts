@@ -7,7 +7,12 @@ import {
 import { PrismaService } from '../shared/modules/prisma/prisma.service';
 import { Prisma, User } from '@prisma/client';
 import { prismaExclude } from '../shared/modules/prisma/prisma-exclude';
-import { UserCreateDto, UserDto, UserUpdateDto } from './user.dto';
+import {
+  UserCreateDto,
+  UserDto,
+  UserOAuthCreateDto,
+  UserUpdateDto,
+} from './user.dto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { AuthCompleteSignUpDto, AuthParitalSignupDto } from '../auth/auth.dto';
 import * as bcrypt from 'bcrypt';
@@ -83,9 +88,43 @@ export class UserService {
     });
   }
 
-  public async findByEmail(email: string): Promise<User> {
+  public async findByEmail(email: string): Promise<User | null> {
     this.logger.log(`Finding user by email: ${email}`);
     return this.prisma.user.findUnique({ where: { email } });
+  }
+
+  // --- Method for creating OAuth users ---
+  public async createOAuthUser(
+    userOAuthDto: UserOAuthCreateDto,
+  ): Promise<User> {
+    this.logger.log(`Creating OAuth user with email: ${userOAuthDto.email}`);
+    try {
+      return await this.prisma.user.create({
+        data: {
+          email: userOAuthDto.email,
+          firstName: userOAuthDto.firstName,
+          lastName: userOAuthDto.lastName,
+          pofilePic: userOAuthDto.pofilePic,
+          // Password is intentionally omitted
+        },
+      });
+    } catch (err) {
+      this.logger.error('Error during OAuth user creation: ', err);
+      // Handle potential errors, e.g., unique constraint violation if email somehow exists
+      if (
+        err instanceof PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        this.logger.warn(
+          `OAuth user creation failed - email already exists: ${userOAuthDto.email}`,
+        );
+        // Re-throw or handle as appropriate for your application logic
+        throw new ForbiddenException(
+          'Email already associated with an account',
+        );
+      }
+      throw err; // Re-throw other errors
+    }
   }
 
   public async updateLastLogin(id: string): Promise<Partial<User>> {

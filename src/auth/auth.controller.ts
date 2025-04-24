@@ -1,6 +1,8 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import {
   AuthCompleteSignUpDto,
+  AuthGoogleIdTokenDto,
   AuthLoginDto,
   AuthParitalSignupDto,
   AuthRefreshTokenDto,
@@ -100,5 +102,39 @@ export class AuthController {
   })
   payload(@Req() req: any): any {
     return responseRequest('success', 'User profile', req.user);
+  }
+
+  // --- Google OAuth Routes ---
+
+  @Get('google')
+  @Public()
+  @UseGuards(AuthGuard('google'))
+  @ApiOperation({ summary: 'Initiate Google OAuth login' })
+  async googleAuth(@Req() req: Request) {}
+
+  @Get('google/callback')
+  @Public()
+  @UseGuards(AuthGuard('google'))
+  @ApiOperation({ summary: 'Google OAuth callback handler' })
+  @ResponseOneSchema(AuthResponseDto)
+  async googleAuthRedirect(@Req() req: Request & { user: any }) {
+    const tokens = await this.authService.handleGoogleLogin(req.user);
+    return responseRequest('success', 'Google login successful', tokens);
+  }
+
+  // --- Endpoint for Mobile Google Sign-In (ID Token Verification) ---
+  @Post('google/verify-token')
+  @Public()
+  @ApiOperation({ summary: 'Verify Google ID Token from Mobile App' })
+  @ApiBody({ type: AuthGoogleIdTokenDto })
+  @ResponseOneSchema(AuthResponseDto)
+  async verifyGoogleToken(@Body() googleIdTokenDto: AuthGoogleIdTokenDto) {
+    const tokens =
+      await this.authService.verifyGoogleIdTokenAndLogin(googleIdTokenDto);
+    return responseRequest(
+      'success',
+      'Google token verification successful',
+      tokens,
+    );
   }
 }
