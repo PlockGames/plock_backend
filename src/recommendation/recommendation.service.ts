@@ -29,19 +29,34 @@ export class RecommendationService {
       this.prisma.like.findMany({
         where: { userId: user.id },
         include: {
-          game: { include: { Taggable: { include: { tag: true } } } },
+          game: {
+            include: {
+              Taggable: { include: { tag: true } },
+              creator: true, // Include the creator's information
+            },
+          },
         },
       }),
       this.prisma.comment.findMany({
         where: { userId: user.id },
         include: {
-          game: { include: { Taggable: { include: { tag: true } } } },
+          game: {
+            include: {
+              Taggable: { include: { tag: true } },
+              creator: true, // Include the creator's information
+            },
+          },
         },
       }),
       this.prisma.playHistory.findMany({
         where: { userId: user.id },
         include: {
-          game: { include: { Taggable: { include: { tag: true } } } },
+          game: {
+            include: {
+              Taggable: { include: { tag: true } },
+              creator: true, // Include the creator's information
+            },
+          },
         },
       }),
     ]);
@@ -134,7 +149,10 @@ export class RecommendationService {
       where: {
         id: { notIn: Array.from(interactedGameIds) },
       },
-      include: { Taggable: { include: { tag: true } } },
+      include: {
+        Taggable: { include: { tag: true } },
+        creator: true, // Include the creator's information
+      },
     });
 
     this.logger.log(
@@ -223,6 +241,7 @@ export class RecommendationService {
         },
         include: {
           Taggable: { include: { tag: true } },
+          creator: true, // Include the creator's information
         },
       });
 
@@ -241,6 +260,7 @@ export class RecommendationService {
         },
         include: {
           Taggable: { include: { tag: true } },
+          creator: true, // Include the creator's information
         },
       });
 
@@ -317,6 +337,7 @@ export class RecommendationService {
         take: limit,
         include: {
           Taggable: { include: { tag: true } },
+          creator: true, // Include the creator's information
         },
         // Using createdAt as a random-ish sorting mechanism
         orderBy: {
