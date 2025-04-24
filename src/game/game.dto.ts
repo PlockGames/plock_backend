@@ -100,6 +100,16 @@ export class GameDto {
   @IsOptional()
   @IsBoolean()
   isLiked?: boolean;
+  // comments
+  @ApiProperty({
+    type: 'array',
+    required: false,
+    description: 'Array of comments',
+    items: { type: 'string' },
+  })
+  @IsOptional()
+  @IsArray()
+  comments?: string[];
 }
 
 export class PlayHistoryDto {

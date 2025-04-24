@@ -22,6 +22,16 @@ export class CommentService {
         where: {
           gameId: idGame,
         },
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
+              pofilePic: true,
+            },
+          },
+        },
       },
       {
         page,

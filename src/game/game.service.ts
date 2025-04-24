@@ -332,7 +332,6 @@ export class GameService {
       gameTitle,
       true,
     );
-    console.log('uploadedFiles', uploadedFiles);
 
     const mediaData = uploadedFiles.map((file) => ({
       filename: `${process.env.MINIO_URL}/${process.env.MINIO_BUCKET}/${file.filename}`,
@@ -377,5 +376,13 @@ export class GameService {
     this.logger.log(`Retrieved ${media.length} images for game ID: ${gameId}`);
     return media;
   }
-}
 
+  public async getCommentCount(gameId: string): Promise<number> {
+    this.logger.log(`Getting comment count for game ID: ${gameId}`);
+    const count = await this.prisma.comment.count({
+      where: { gameId },
+    });
+    this.logger.log(`Found ${count} comments for game ID: ${gameId}`);
+    return count;
+  }
+}
