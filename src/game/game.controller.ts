@@ -13,6 +13,7 @@ import {
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
+import { Game, Media, User } from '@prisma/client';
 import { GameService } from './game.service';
 import {
   GameCreateDto,
