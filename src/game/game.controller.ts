@@ -58,14 +58,21 @@ export class GameController {
   @ApiResponse({ status: 200 })
   @ApiOperation({ summary: 'Get all games', description: 'Get all games' })
   async findAll(
+    @Req() req: Request,
     @Query('page') page: number = 1,
     @Query('perPage') perPage: number = 10,
-    @Req() req: Request,
+    @Query('search') search?: string,
+    @Query('tags') tagIds?: string,
   ) {
+    // Convert comma-separated tag IDs to array if provided
+    const tags = tagIds ? tagIds.split(',') : undefined;
+
     const games = await this.gameService.getAllGames(
       page,
       perPage,
       req.user as User,
+      tags,
+      search,
     );
 
     // Add hasLiked property and commentsCount to each game

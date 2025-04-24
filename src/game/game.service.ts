@@ -20,16 +20,44 @@ export class GameService {
     private readonly likeService: LikeService,
   ) {}
 
-  public async getAllGames(page: number, perPage: number, user?: User) {
+  public async getAllGames(
+    page: number,
+    perPage: number,
+    user?: User,
+    tags?: string[],
+    searchTerm?: string,
+  ) {
     this.logger.log(
-      `Retrieving all games - Page: ${page}, PerPage: ${perPage}`,
+      `Retrieving all games - Page: ${page}, PerPage: ${perPage}, Tags: ${tags?.join(',')}, Search: ${searchTerm}`,
     );
     const paginate = createPaginator({ perPage });
+
+    // Build the where clause based on filters
+    const where: Prisma.GameWhereInput = {};
+
+    // Add search by title if provided
+    if (searchTerm) {
+      where.title = {
+        contains: searchTerm,
+        mode: 'insensitive', // Case insensitive search
+      };
+    }
+
+    // Add tag filtering if provided
+    if (tags && tags.length > 0) {
+      where.Taggable = {
+        some: {
+          tagId: {
+            in: tags,
+          },
+        },
+      };
+    }
 
     const games = await paginate<GameDto, Prisma.GameFindManyArgs>(
       this.prisma.game,
       {
-        where: {},
+        where,
         include: {
           Taggable: {
             include: {
