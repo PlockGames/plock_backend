@@ -50,7 +50,8 @@ export class GameService {
     // Añade la propiedad hasLiked a cada juego
     const gamesWithHasLiked = await Promise.all(
       games.data.map(async (game) => {
-        const hasLiked = await this.likeService.hasLikedGame(user.id, game.id);
+        // Corrigiendo el orden de los parámetros: primero gameId, luego userId
+        const hasLiked = await this.likeService.hasLikedGame(game.id, user?.id);
         return {
           ...game,
           hasLiked,
@@ -99,7 +100,8 @@ export class GameService {
     // Añade la propiedad hasLiked a cada juego
     const gamesWithHasLiked = await Promise.all(
       games.data.map(async (game) => {
-        const hasLiked = await this.likeService.hasLikedGame(user.id, game.id);
+        // Corrigiendo el orden de los parámetros: primero gameId, luego userId
+        const hasLiked = await this.likeService.hasLikedGame(game.id, user.id);
         return {
           ...game,
           hasLiked,
@@ -424,10 +426,15 @@ export class GameService {
     if (currentUser) {
       const gamesWithHasLiked = await Promise.all(
         games.data.map(async (game) => {
+          // Corrigiendo el orden de los parámetros: primero gameId, luego userId
           const hasLiked = await this.likeService.hasLikedGame(
-            currentUser.id,
             game.id,
+            currentUser.id,
           );
+          this.logger.log(
+            `Game ${game.id} - hasLiked: ${hasLiked} for user ${currentUser.id}`,
+          );
+
           const commentsCount = await this.getCommentCount(game.id);
           return {
             ...game,

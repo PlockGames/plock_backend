@@ -87,4 +87,3 @@ export class LikeService {
     return !!like;
   }
 }
-
