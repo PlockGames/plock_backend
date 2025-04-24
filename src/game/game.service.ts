@@ -327,7 +327,6 @@ export class GameService {
       gameTitle,
       true,
     );
-    console.log('uploadedFiles', uploadedFiles);
 
     const mediaData = uploadedFiles.map((file) => ({
       filename: `${process.env.MINIO_URL}/${process.env.MINIO_BUCKET}/${file.filename}`,
