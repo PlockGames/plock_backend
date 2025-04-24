@@ -35,9 +35,6 @@ jobs:
       - name: Install dependencies
         run: yarn install
 
-      - name: Prisma generate
-        run: yarn prisma generate
-
       - name: Run tests
         run: yarn test
 
