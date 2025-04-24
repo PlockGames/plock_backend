@@ -33,7 +33,7 @@ export class LikeController {
   @ResponseOneSchema(LikeResponseDto)
   async countLikes(@Param('gameId') gameId: string) {
     const totalLikes = await this.likeService.countLikes(gameId);
-    return { status: 'success', totalLikes };
+    return { status: 'success', data: {totalLikes} };
   }
 
   @Post()

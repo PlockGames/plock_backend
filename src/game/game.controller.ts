@@ -13,12 +13,13 @@ import {
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
-import { GameService } from './game.service';
 import { Game, Media, User } from '@prisma/client';
+import { GameService } from './game.service';
 import {
   GameCreateDto,
   GameDto,
   GameUpdateDto,
+  MediaDto,
   PlayHistoryDto,
   PlayTimeDto,
 } from './game.dto';
@@ -352,5 +353,20 @@ export class GameController {
       'Images uploaded successfully',
       media,
     );
+  }
+
+  // get images from a game
+  @Get(':id/images')
+  @ApiBearerAuth('JWT-auth')
+  @ResponseManySchema(MediaDto)
+  @ApiOperation({
+    summary: 'Get images',
+    description: 'Get images for a game',
+  })
+  public async getImages(
+    @Param('id') gameId: string,
+  ): Promise<ResponseRequest<Media[]>> {
+    const images = await this.gameService.getGameImages(gameId);
+    return responseRequest<Media[]>('success', 'Images found', images);
   }
 }

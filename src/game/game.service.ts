@@ -131,9 +131,10 @@ export class GameService {
     if (!game) this.logger.warn(`Game with ID: ${id} not found`);
     this.logger.log(`Game retrieved: ${JSON.stringify(game)}`);
 
+    const hasLiked = await this.likeService.hasLikedGame(id, user?.id);
     return {
       ...game,
-      hasLiked: await this.likeService.hasLikedGame(user.id, id),
+      hasLiked: hasLiked,
     };
   }
 
@@ -199,6 +200,7 @@ export class GameService {
   public async updateGame(id: string, data: GameUpdateDto) {
     this.logger.log(`Updating game ID: ${id}`);
     const game = await this.getGame(id);
+    this.logger.log(`Game found for update ID: ${id}`);
     if (!game) {
       this.logger.warn(`Game not found for update ID: ${id}`);
       throw new HttpException('Game not found', HttpStatus.NOT_FOUND);
@@ -237,6 +239,9 @@ export class GameService {
     }
 
     delete data.contentGame;
+    if (data.tags) {
+      delete data.tags;
+    }
 
     const updatedGame = await this.prisma.game.update({
       where: { id },
@@ -350,6 +355,26 @@ export class GameService {
     );
 
     return createdMedia;
+  }
+
+  public async getGameImages(gameId: string): Promise<Media[]> {
+    this.logger.log(`Retrieving images for game ID: ${gameId}`);
+
+    const game = await this.prisma.game.findUnique({
+      where: { id: gameId },
+    });
+
+    if (!game) {
+      this.logger.warn(`Game with ID: ${gameId} not found`);
+      throw new HttpException('Game not found', HttpStatus.NOT_FOUND);
+    }
+
+    const media = await this.prisma.media.findMany({
+      where: { gameId },
+    });
+
+    this.logger.log(`Retrieved ${media.length} images for game ID: ${gameId}`);
+    return media;
   }
 
   public async getCommentCount(gameId: string): Promise<number> {
