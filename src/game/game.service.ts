@@ -385,4 +385,67 @@ export class GameService {
     this.logger.log(`Found ${count} comments for game ID: ${gameId}`);
     return count;
   }
+
+  public async getGamesByUserId(
+    userId: string,
+    page: number,
+    perPage: number,
+    currentUser?: User,
+  ) {
+    this.logger.log(
+      `Retrieving all games for user ID: ${userId} - Page: ${page}, PerPage: ${perPage}`,
+    );
+    const paginate = createPaginator({ perPage });
+    const games = await paginate<GameDto, Prisma.GameFindManyArgs>(
+      this.prisma.game,
+      {
+        where: { creatorId: userId },
+        include: {
+          Taggable: {
+            include: {
+              tag: true,
+            },
+          },
+          creator: true,
+        },
+        orderBy: {
+          id: 'desc',
+        },
+      },
+      {
+        page,
+      },
+    );
+    this.logger.log(
+      `Retrieved ${games.data.length} games for user ID: ${userId}`,
+    );
+
+    // Add hasLiked property to each game if a current user is provided
+    if (currentUser) {
+      const gamesWithHasLiked = await Promise.all(
+        games.data.map(async (game) => {
+          const hasLiked = await this.likeService.hasLikedGame(
+            currentUser.id,
+            game.id,
+          );
+          const commentsCount = await this.getCommentCount(game.id);
+          return {
+            ...game,
+            hasLiked,
+            commentsCount,
+          };
+        }),
+      );
+      this.logger.log(
+        `Retrieved ${gamesWithHasLiked.length} games with like status for user ID: ${userId}`,
+      );
+      return {
+        ...games,
+        data: gamesWithHasLiked,
+      };
+    }
+
+    // If no current user, just return games without hasLiked property
+    return games;
+  }
 }

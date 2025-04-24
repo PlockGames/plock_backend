@@ -371,4 +371,32 @@ export class GameController {
     const images = await this.gameService.getGameImages(gameId);
     return responseRequest<Media[]>('success', 'Images found', images);
   }
+
+  @Get('user/:userId')
+  @ApiPaginatedResponse(GameDto)
+  @ApiBearerAuth('JWT-auth')
+  @ApiResponse({ status: 200 })
+  @ApiOperation({
+    summary: 'Get games by user ID',
+    description: 'Get all games created by a specific user',
+  })
+  async getGamesByUserId(
+    @Param('userId') userId: string,
+    @Query('page') page: number = 1,
+    @Query('perPage') perPage: number = 10,
+    @Req() req: Request,
+  ) {
+    const games = await this.gameService.getGamesByUserId(
+      userId,
+      page,
+      perPage,
+      req.user as User,
+    );
+
+    return responseRequest<PaginatedOutputDto<GameDto>>(
+      'success',
+      'Games found for user',
+      games,
+    );
+  }
 }
