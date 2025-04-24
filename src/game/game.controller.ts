@@ -316,28 +316,6 @@ export class GameController {
   @UseInterceptors(
     FilesInterceptor('images', 10, {
       storage: memoryStorage(),
-      fileFilter: (req, file, callback) => {
-        if (
-          file.mimetype.includes('jpeg') ||
-          file.mimetype.includes('png') ||
-          file.mimetype.includes('gif') ||
-          file.mimetype.includes('webp') ||
-          file.mimetype.includes('svg') ||
-          file.mimetype.includes('jpg') ||
-          file.mimetype.includes('bmp') ||
-          file.mimetype.includes('tiff')
-        ) {
-          callback(null, true);
-        } else {
-          callback(
-            new HttpException(
-              `Unsupported file type: ${file.mimetype}`,
-              HttpStatus.BAD_REQUEST,
-            ),
-            false,
-          );
-        }
-      },
     }),
   )
   public async uploadImages(
