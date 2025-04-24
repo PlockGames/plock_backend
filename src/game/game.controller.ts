@@ -322,7 +322,10 @@ export class GameController {
           file.mimetype.includes('png') ||
           file.mimetype.includes('gif') ||
           file.mimetype.includes('webp') ||
-          file.mimetype.includes('svg')
+          file.mimetype.includes('svg') ||
+          file.mimetype.includes('jpg') ||
+          file.mimetype.includes('bmp') ||
+          file.mimetype.includes('tiff')
         ) {
           callback(null, true);
         } else {
@@ -335,7 +338,6 @@ export class GameController {
           );
         }
       },
-      limits: { fileSize: 5 * 1024 * 1024 },
     }),
   )
   public async uploadImages(
