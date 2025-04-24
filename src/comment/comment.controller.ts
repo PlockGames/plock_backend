@@ -37,11 +37,13 @@ export class CommentController {
     @Param('idGame') idGame: string,
     @Query('page') page: number = 1,
     @Query('perPage') perPage: number = 10,
+    @Req() req: Request,
   ) {
     const comments = await this.commentService.getAllCommentsForGame(
       idGame,
       page,
       perPage,
+      req.user as User,
     );
     return responseRequest<PaginatedOutputDto<CommentDto>>(
       'success',
@@ -103,14 +105,17 @@ export class CommentController {
   }
 
   @Delete(':id')
-  @UseInterceptors(CommentOwnerInterceptor)
   @ApiBearerAuth('JWT-auth')
   @ResponseOneSchema(CommentDto)
   @ApiOperation({ summary: 'Delete comment', description: 'Delete a comment' })
   public async delete(
     @Param('id') id: string,
+    @Req() req: Request,
   ): Promise<ResponseRequest<Partial<Comment>>> {
-    const commentDeleted = await this.commentService.delete(id);
+    const commentDeleted = await this.commentService.delete(
+      id,
+      req.user as User,
+    );
     return responseRequest<Partial<Comment>>(
       'success',
       'Comment deleted',
