@@ -1,0 +1,100 @@
+name: main
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  NODE_VERSION: '20.x'
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  VM_SSH_HOST: ${{ secrets.VM_SSH_HOST }}
+  VM_SSH_USERNAME: ${{ secrets.VM_SSH_USERNAME }}
+  VM_SSH_PASSWORD: ${{ secrets.VM_SSH_PASSWORD }}
+  VM_SSH_PORT: ${{ secrets.VM_SSH_PORT }}
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Run tests
+        run: yarn test
+
+  docker-publish-back:
+    needs: test
+    name: Docker Publish - Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ env.DOCKER_PASSWORD }}
+
+      - name: Build Docker image
+        run: docker build -t soymustael/plock-back:${{ github.ref_name }} .
+
+      - name: Push Docker image
+        run: docker push soymustael/plock-back:${{ github.ref_name }}
+
+  deploy-to-vm:
+    needs: docker-publish-back
+    name: Deploy to VM
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install SSH client
+        run: sudo apt-get install -y openssh-client
+
+      - name: SSH into VM, pull image, and run container
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.VM_SSH_HOST }}
+          username: ${{ env.VM_SSH_USERNAME }}
+          password: ${{ env.VM_SSH_PASSWORD }}
+          port: ${{ env.VM_SSH_PORT }}
+          script: |
+            docker login -u ${{ env.DOCKER_USERNAME }} -p ${{ env.DOCKER_PASSWORD }}
+            docker pull soymustael/plock-back:${{ github.ref_name }}
+            if [ "$(docker ps -a | grep server-${{ github.ref_name }})" ]; then
+                docker stop server-${{ github.ref_name }}
+                docker rm server-${{ github.ref_name }}
+            fi
+            if [ "${{ github.ref_name }}" = "main" ]; then
+              sudo docker run -d --name server-${{ github.ref_name }} -p 3000:3000 --env-file /opt/app/.env.${{ github.ref_name }} soymustael/plock-back:${{ github.ref_name }}
+            elif [ "${{ github.ref_name }}" = "develop" ]; then
+              sudo docker run -d --name server-${{ github.ref_name }} -p 4000:4000 --env-file /opt/app/.env.${{ github.ref_name }} soymustael/plock-back:${{ github.ref_name }}
+            else
+              echo "Unsupported branch: ${{ github.ref_name }}"
+              exit 1
+            fi

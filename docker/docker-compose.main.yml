@@ -1,0 +1,38 @@
+services:
+  postgres_main:
+    container_name: postgres_main
+    image: postgres:latest
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER_MAIN}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_MAIN}
+      - POSTGRES_DB=${POSTGRES_DB_MAIN}
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data_main:/var/lib/postgresql/data/
+    networks:
+      - nest-net
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'pg_isready',
+          '-U',
+          '${POSTGRES_USER_MAIN}',
+          '-d',
+          '${POSTGRES_DB_MAIN}',
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+networks:
+  nest-net:
+    external: true
+
+volumes:
+  postgres_data_main:
+    name: postgres_data_main

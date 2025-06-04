@@ -1,0 +1,38 @@
+services:
+  postgres_develop:
+    container_name: postgres_develop
+    image: postgres:latest
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER_DEVELOP}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_DEVELOP}
+      - POSTGRES_DB=${POSTGRES_DB_DEVELOP}
+    ports:
+      - 5433:5432
+    volumes:
+      - postgres_data_develop:/var/lib/postgresql/data/
+    networks:
+      - nest-net
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'pg_isready',
+          '-U',
+          '${POSTGRES_USER_DEVELOP}',
+          '-d',
+          '${POSTGRES_DB_DEVELOP}',
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+networks:
+  nest-net:
+    external: true
+
+volumes:
+  postgres_data_develop:
+    name: postgres_data_develop

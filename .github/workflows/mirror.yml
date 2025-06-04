@@ -1,0 +1,64 @@
+name: Push on Epitech repository
+
+env:
+  EPITECH_REPO: 'T-ESP-901-60373-TLS-tiktok_game-2'
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+jobs:
+  mirror:
+    if: github.repository == 'PlockGames/plock_backend'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.AUTOMNE_TOKEN }}
+
+      - name: Extract branch name
+        id: extract_branch
+        run: echo "::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/})"
+
+        #Clone le repo Epitech
+      - name: Clone Epitech repo
+        uses: GuillaumeFalourd/clone-github-repo-action@v2.3
+        with:
+          owner: 'EpitechMscProPromo2025'
+          repository: ${{ env.EPITECH_REPO }}
+          branch: ${{ steps.extract_branch.outputs.branch }}
+          access-token: ${{ secrets.AUTOMNE_TOKEN }}
+
+      - name: Copy code from commit to the cloned repo and git push
+        run: |
+          #Supprime le dossier back back pré existant dans le but d'en recréer un nouveau et de copier le code du commit dedans
+          rm -rf $EPITECH_REPO/back/
+          mkdir -p $EPITECH_REPO/back/
+
+          #Supprime les actions mirror ainsi que le dossier .git du repo de l'org Plock qui ne sont pas utile dans le repo d'Epitech
+          rm  .github/workflows/mirror*
+          rm  -rf .git
+
+          #Copie tout le code du dossier actuel pour le mettre dans le répo Epitech en excluant tout ce qui ne sert pas
+          sudo rsync -a . $EPITECH_REPO/back/ --exclude=$EPITECH_REPO --exclude=".git"
+          if [ -d "$EPITECH_REPO/back/plock_backend" ]; then rm -rf $EPITECH_REPO/back/plock_backend; fi
+
+      - name: Commit files
+        run: |
+          #Entre dans le répertoire back d'Epitech et configure l'utilisateur pour qu'il soient celui qui trigger l'action
+          cd $EPITECH_REPO/back
+          git config --local user.email "$GITHUB_ACTOR_EMAIL"
+          git config --local user.name "$GITHUB_ACTOR"
+
+          #Ajoutes tout le code et le commit
+          git add .*
+          git add *
+          git commit -m "$GITHUB_REF"
+          git push --force
+        env:
+          GITHUB_REF: ${{ github.ref }}
+          GITHUB_ACTOR: ${{ github.actor}}
+          GITHUB_ACTOR_EMAIL: ${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com

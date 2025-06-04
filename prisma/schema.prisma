@@ -1,0 +1,166 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model User {
+  id           String    @id @default(uuid())
+  username     String?   @unique
+  firstName    String?
+  lastName     String?
+  email        String    @unique
+  password     String?
+  phoneNumber  String?   @unique
+  birthDate    String?
+  role         UserRole  @default(USER)
+  isPrivate    Boolean   @default(false)
+  refreshToken String?
+  pofilePic    String?
+  lastLogin    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  media       Media[]       @relation("UserMedia")
+  comments    Comment[]     @relation("UserComments")
+  Game        Game[]        @relation("UserGames")
+  likedGames  Like[]
+  PlayHistory PlayHistory[]
+}
+
+model Media {
+  id                String   @id @default(uuid())
+  filename          String
+  mimetype          String
+  name              String
+  size              Int
+  thumbnailFileName String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  userId String?
+  user   User?   @relation("UserMedia", fields: [userId], references: [id], onDelete: Cascade)
+
+  gameId String?
+  game   Game?   @relation("GameMedia", fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([gameId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation("UserComments", fields: [userId], references: [id], onDelete: Cascade)
+
+  gameId String
+  game   Game   @relation("GameComment", fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([gameId])
+}
+
+model Game {
+  id              String   @id @default(uuid())
+  title           String
+  creationDate    DateTime
+  gameUrl         String
+  winConditionUrl String?
+  gameObjectsUrl  String?
+  playTime        String
+  gameType        String
+  thumbnailUrl    String
+  likes           Int?     @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  creatorId String
+  creator   User   @relation("UserGames", fields: [creatorId], references: [id], onDelete: Cascade)
+
+  Taggable Taggable[]
+  comments Comment[]  @relation("GameComment")
+  likedBy  Like[]
+
+  media         Media[]            @relation("GameMedia")
+  winConditions WinConditionGame[] @relation("GameWinCondition")
+  PlayHistory   PlayHistory[]
+
+  @@index([creatorId])
+}
+
+model WinConditionGame {
+  id        String   @id @default(uuid())
+  url       String
+  gameId    String
+  game      Game     @relation("GameWinCondition", fields: [gameId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@index([gameId])
+}
+
+model Like {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  gameId String
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, gameId])
+  @@index([gameId])
+  @@index([userId])
+}
+
+model Tag {
+  id          String     @id @default(uuid())
+  name        String     @unique
+  taggedItems Taggable[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model Taggable {
+  id    String @id @default(uuid())
+  tagId String
+  tag   Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  gameId String?
+  game   Game?   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@unique([tagId, gameId])
+  @@index([gameId])
+}
+
+model PlayHistory {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gameId     String
+  game       Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  playTime   Int // in seconds
+  lastPlayed DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId])
+  @@index([gameId])
+}
